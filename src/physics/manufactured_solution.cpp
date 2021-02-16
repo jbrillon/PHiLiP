@@ -6,7 +6,7 @@
 
 #include "manufactured_solution.h"
 // TEST - iss24 test
-//#define ADoiDITIVE_SOLUTION
+//#define ADDITIVE_SOLUTION
 //#define COSINE_SOLUTION
 //#define ATAN_SOLUTION
 #ifdef ATAN_SOLUTION
