@@ -10,6 +10,24 @@ void ManufacturedConvergenceStudyParam::declare_parameters (dealii::ParameterHan
 {
     prm.enter_subsection("manufactured solution convergence study");
     {
+        // iss24
+        prm.declare_entry("manufactured_solution_type", "exponential",
+                          dealii::Patterns::Selection(
+                          " additive | "
+                          " cosine | "
+                          " arctangent | "
+                          " exponential | "
+                          " even_polynomial | "
+                          " polynomial"),
+                          "The type of manufactured solution we want to prescribe. "
+                          "Choices are " 
+                          " <additive | " 
+                          "  cosine | "
+                          "  arctangent | "
+                          "  exponential | "
+                          "  even_polynomial | "
+                          "  polynomial >.");
+
         prm.declare_entry("use_manufactured_source_term", "false",
                           dealii::Patterns::Bool(),
                           "Uses non-zero source term based on the manufactured solution and the PDE.");
@@ -67,7 +85,17 @@ void ManufacturedConvergenceStudyParam ::parse_parameters (dealii::ParameterHand
 {
     prm.enter_subsection("manufactured solution convergence study");
     {
+        // iss24
+        const std::string manufactured_solution_string = prm.get("manufactured_solution_type");
+        if (manufactured_solution_string == "additive") { manufactured_solution_type = ManufacturedSolutionType::additive; }
+        else if (manufactured_solution_string == "cosine") { manufactured_solution_type = ManufacturedSolutionType::cosine; }
+        else if (manufactured_solution_string == "arctangent") { manufactured_solution_type = ManufacturedSolutionType::arctangent; }
+        else if (manufactured_solution_string == "exponential") { manufactured_solution_type = ManufacturedSolutionType::exponential; }
+        else if (manufactured_solution_string == "even_polynomial") { manufactured_solution_type = ManufacturedSolutionType::even_polynomial; } // confirm these names with Doug
+        else if (manufactured_solution_string == "polynomial") { manufactured_solution_type = ManufacturedSolutionType::polynomial; } // confirm these names with Doug
+
         use_manufactured_source_term = prm.get_bool("use_manufactured_source_term");
+        
         const std::string grid_string = prm.get("grid_type");
         if (grid_string == "hypercube") grid_type = GridEnum::hypercube;
         if (grid_string == "sinehypercube") grid_type = GridEnum::sinehypercube;

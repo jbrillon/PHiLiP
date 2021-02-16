@@ -13,6 +13,20 @@ class ManufacturedConvergenceStudyParam
 public:
     ManufacturedConvergenceStudyParam (); ///< Constructor
 
+    // iss24
+    /// Currently allows to prescribe all types below
+    enum ManufacturedSolutionType { 
+        additive,
+        cosine,
+        arctangent,
+        exponential,
+        even_polynomial,
+        polynomial,
+        };
+    // iss24
+    /// Store the Manufactured Solution type to be prescribed (selected from input file)
+    ManufacturedSolutionType manufactured_solution_type;
+
     /// Uses non-zero source term based on the manufactured solution and the PDE.
     bool use_manufactured_source_term;
 
