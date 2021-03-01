@@ -1,10 +1,11 @@
+add_subdirectory(manufactured_solutions)
+
 SET(SOURCE
     physics_factory.cpp
     physics.cpp
     convection_diffusion.cpp
     burgers.cpp
     euler.cpp
-    manufactured_solution.cpp
     mhd.cpp
     )
 
@@ -12,6 +13,10 @@ foreach(dim RANGE 1 3)
     # Output library
     string(CONCAT PhysicsLib Physics_${dim}D)
     add_library(${PhysicsLib} STATIC ${SOURCE})
+    # Link with ManufacturedSolutionsLib
+    string(CONCAT ManufacturedSolutionsLib ManufacturedSolutions_${dim}D)
+    target_link_libraries(${PhysicsLib} ${ManufacturedSolutionsLib})
+
 
     # Setup target with deal.II
     if(NOT DOC_ONLY)

@@ -16,6 +16,7 @@ public:
     // iss24
     /// Currently allows to prescribe all types below
     enum ManufacturedSolutionType { 
+        sine,
         additive,
         cosine,
         arctangent,

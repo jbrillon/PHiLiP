@@ -6,7 +6,7 @@
 #include <deal.II/fe/fe_update_flags.h>
 
 #include "parameters/all_parameters.h"
-#include "physics/manufactured_solution.h"
+#include "manufactured_solutions/manufactured_solution_factory.h"
 
 
 namespace PHiLiP {

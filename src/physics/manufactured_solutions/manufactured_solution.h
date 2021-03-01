@@ -1,9 +1,15 @@
 #ifndef __MANUFACTUREDSOLUTIONFUNCTION_H__
 #define __MANUFACTUREDSOLUTIONFUNCTION_H__
 
+#include "ADTypes.hpp" // Included to clean up end of code
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/base/function.h>
+
+// Added by Julien for the bool functions
+#include <Sacado.hpp>
+#include <deal.II/base/function.templates.h> // Needed to instantiate dealii::Function<PHILIP_DIM,Sacado::Fad::DFad<double>>
+#include <deal.II/base/function_time.templates.h> // Needed to instantiate dealii::Function<PHILIP_DIM,Sacado::Fad::DFad<double>>
 
 //#include <Sacado.hpp>
 //
@@ -13,6 +19,17 @@
 
 
 namespace PHiLiP {
+///< Provide isfinite for double.
+bool isfinite(double);
+
+///< Provide isfinite for FadType
+bool isfinite(Sacado::Fad::DFad<double>);
+
+///< Provide isfinite for FadFadType
+bool isfinite(Sacado::Fad::DFad<Sacado::Fad::DFad<double>>);
+
+///< Provide isfinite for RadFadType
+bool isfinite(Sacado::Rad::ADvar<Sacado::Fad::DFad<double>>);
 
 
 /// Manufactured solution used for grid studies to check convergence orders.
@@ -41,15 +58,15 @@ public:
      */
     ManufacturedSolutionFunction (const unsigned int nstate = 1);
 
-    /// Destructor
-    ~ManufacturedSolutionFunction() {};
+    /// Virtual destructor required for abstract classes.
+    virtual ~ManufacturedSolutionFunction() {}; // Double check with Doug
   
     /// Manufactured solution exact value
     /** \code
      *  u[s] = A[s]*sin(freq[s][0]*x)*sin(freq[s][1]*y)*sin(freq[s][2]*z);
      *  \endcode
      */
-    virtual real value (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    virtual real value (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
 
     /// Gradient of the exact manufactured solution
     /** \code
@@ -58,7 +75,7 @@ public:
      *  grad_u[s][2] = A[s]*freq[s][2]*sin(freq[s][0]*x)*sin(freq[s][1]*y)*cos(freq[s][2]*z);
      *  \endcode
      */
-    virtual dealii::Tensor<1,dim,real> gradient (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    virtual dealii::Tensor<1,dim,real> gradient (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
 
     /// Uses finite-difference to evaluate the gradient
     dealii::Tensor<1,dim,real> gradient_fd (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
@@ -80,7 +97,7 @@ public:
      *
      *  Note that this term is symmetric since \f$\frac{\partial u }{\partial x \partial y} = \frac{\partial u }{\partial y \partial x} \f$
      */
-    virtual dealii::SymmetricTensor<2,dim,real> hessian (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    virtual dealii::SymmetricTensor<2,dim,real> hessian (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
 
     /// Uses finite-difference to evaluate the hessian
     dealii::SymmetricTensor<2,dim,real> hessian_fd (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;

@@ -13,6 +13,7 @@ void ManufacturedConvergenceStudyParam::declare_parameters (dealii::ParameterHan
         // iss24
         prm.declare_entry("manufactured_solution_type", "exponential",
                           dealii::Patterns::Selection(
+                          " sine | "
                           " additive | "
                           " cosine | "
                           " arctangent | "
@@ -21,7 +22,8 @@ void ManufacturedConvergenceStudyParam::declare_parameters (dealii::ParameterHan
                           " polynomial"),
                           "The type of manufactured solution we want to prescribe. "
                           "Choices are " 
-                          " <additive | " 
+                          " <sine | "
+                          "  additive | " 
                           "  cosine | "
                           "  arctangent | "
                           "  exponential | "
@@ -87,7 +89,8 @@ void ManufacturedConvergenceStudyParam ::parse_parameters (dealii::ParameterHand
     {
         // iss24
         const std::string manufactured_solution_string = prm.get("manufactured_solution_type");
-        if (manufactured_solution_string == "additive") { manufactured_solution_type = ManufacturedSolutionType::additive; }
+        if (manufactured_solution_string == "sine") { manufactured_solution_type = ManufacturedSolutionType::sine; }
+        else if (manufactured_solution_string == "additive") { manufactured_solution_type = ManufacturedSolutionType::additive; }
         else if (manufactured_solution_string == "cosine") { manufactured_solution_type = ManufacturedSolutionType::cosine; }
         else if (manufactured_solution_string == "arctangent") { manufactured_solution_type = ManufacturedSolutionType::arctangent; }
         else if (manufactured_solution_string == "exponential") { manufactured_solution_type = ManufacturedSolutionType::exponential; }
