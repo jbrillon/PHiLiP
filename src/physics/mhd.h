@@ -77,9 +77,9 @@ class MHD : public PhysicsBase <dim, nstate, real>
 {
 public:
     /// Constructor
-    MHD (const double gamma_gas)
-    : gam(gamma_gas)
-    , gamm1(gam-1.0)
+    MHD (const Parameters::ManufacturedConvergenceStudyParam *const parameters_input,
+        const double gamma_gas)
+    : PhysicsBase<dim,nstate,real>(parameters_input), gam(gamma_gas), gamm1(gam-1.0)
     {
         static_assert(nstate==8, "Physics::MHD() should be created with nstate=8");
 

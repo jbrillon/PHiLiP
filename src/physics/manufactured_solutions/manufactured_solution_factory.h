@@ -16,12 +16,12 @@ namespace PHiLiP {
 /// Create specified manufactured solution as ManufacturedSolutionFunction (base) object 
 /** Factory design pattern whose job is to create the correct manufactured solution
  */
-template <int dim, typename real>
+template <int dim, int nstate, typename real>
 class ManufacturedSolutionFactory
 {
 public:
     /// Factory to return the correct manufactured solution given input file.
-    static std::shared_ptr< ManufacturedSolutionFunction<dim,real> >
+    static std::shared_ptr< ManufacturedSolutionFunction<dim,nstate,real> >
         create_ManufacturedSolution(const Parameters::ManufacturedConvergenceStudyParam *const parameters_input);
 };
 

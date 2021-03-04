@@ -39,8 +39,11 @@ public:
     const bool hasDiffusion;
 
     /// Constructor
-    Burgers (const bool convection = true, const bool diffusion = true)
-        : hasConvection(convection), hasDiffusion(diffusion)
+    Burgers (
+        const Parameters::ManufacturedConvergenceStudyParam *const parameters_input,
+        const bool convection = true, 
+        const bool diffusion = true)
+        : PhysicsBase<dim,nstate,real>(parameters_input), hasConvection(convection), hasDiffusion(diffusion)
     {
         static_assert(nstate==dim, "Physics::Burgers() should be created with nstate==dim");
     };

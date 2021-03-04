@@ -94,8 +94,8 @@ void ManufacturedConvergenceStudyParam ::parse_parameters (dealii::ParameterHand
         else if (manufactured_solution_string == "cosine") { manufactured_solution_type = ManufacturedSolutionType::cosine; }
         else if (manufactured_solution_string == "arctangent") { manufactured_solution_type = ManufacturedSolutionType::arctangent; }
         else if (manufactured_solution_string == "exponential") { manufactured_solution_type = ManufacturedSolutionType::exponential; }
-        else if (manufactured_solution_string == "even_polynomial") { manufactured_solution_type = ManufacturedSolutionType::even_polynomial; } // confirm these names with Doug
-        else if (manufactured_solution_string == "polynomial") { manufactured_solution_type = ManufacturedSolutionType::polynomial; } // confirm these names with Doug
+        else if (manufactured_solution_string == "even_polynomial") { manufactured_solution_type = ManufacturedSolutionType::even_polynomial; }
+        else if (manufactured_solution_string == "polynomial") { manufactured_solution_type = ManufacturedSolutionType::polynomial; }
 
         use_manufactured_source_term = prm.get_bool("use_manufactured_source_term");
         

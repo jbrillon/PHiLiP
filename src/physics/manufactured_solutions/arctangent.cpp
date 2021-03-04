@@ -3,9 +3,9 @@
 #include "arctangent.h"
 
 namespace PHiLiP {
-template <int dim, typename real>
-inline real Arctangent<dim,real>
-::value (const dealii::Point<dim,real> &point, const unsigned int istate) const
+template <int dim, int nstate, typename real>
+inline real Arctangent<dim,nstate,real>
+::value (const dealii::Point<dim,real> &point, const int /*istate*/) const
 {
 	real value = 1.0;
     for (int d=0; d<dim; d++) {
@@ -16,9 +16,9 @@ inline real Arctangent<dim,real>
     return value;
 }
 
-template <int dim, typename real>
-inline dealii::Tensor<1,dim,real> Arctangent<dim,real>
-::gradient (const dealii::Point<dim,real> &point, const unsigned int istate) const
+template <int dim, int nstate, typename real>
+inline dealii::Tensor<1,dim,real> Arctangent<dim,nstate,real>
+::gradient (const dealii::Point<dim,real> &point, const int /*istate*/) const
 {
 	dealii::Tensor<1,dim,real> gradient;
 	
@@ -58,9 +58,9 @@ inline dealii::Tensor<1,dim,real> Arctangent<dim,real>
 	return gradient;
 }
 
-template <int dim, typename real>
-inline dealii::SymmetricTensor<2,dim,real> Arctangent<dim,real>
-::hessian (const dealii::Point<dim,real> &point, const unsigned int istate) const
+template <int dim, int nstate, typename real>
+inline dealii::SymmetricTensor<2,dim,real> Arctangent<dim,nstate,real>
+::hessian (const dealii::Point<dim,real> &point, const int /*istate*/) const
 {
     dealii::SymmetricTensor<2,dim,real> hessian;
 
@@ -113,10 +113,38 @@ inline dealii::SymmetricTensor<2,dim,real> Arctangent<dim,real>
     return hessian;
 }
 
-template class Arctangent<PHILIP_DIM, double>;
-template class Arctangent<PHILIP_DIM, FadType >;
-template class Arctangent<PHILIP_DIM, RadType >;
-template class Arctangent<PHILIP_DIM, FadFadType >;
-template class Arctangent<PHILIP_DIM, RadFadType >;
+template class Arctangent<PHILIP_DIM, 1, double>;
+template class Arctangent<PHILIP_DIM, 2, double>;
+template class Arctangent<PHILIP_DIM, 3, double>;
+template class Arctangent<PHILIP_DIM, 4, double>;
+template class Arctangent<PHILIP_DIM, 5, double>;
+template class Arctangent<PHILIP_DIM, 8, double>;
 
+template class Arctangent<PHILIP_DIM, 1, FadType>;
+template class Arctangent<PHILIP_DIM, 2, FadType>;
+template class Arctangent<PHILIP_DIM, 3, FadType>;
+template class Arctangent<PHILIP_DIM, 4, FadType>;
+template class Arctangent<PHILIP_DIM, 5, FadType>;
+template class Arctangent<PHILIP_DIM, 8, FadType>;
+
+template class Arctangent<PHILIP_DIM, 1, RadType>;
+template class Arctangent<PHILIP_DIM, 2, RadType>;
+template class Arctangent<PHILIP_DIM, 3, RadType>;
+template class Arctangent<PHILIP_DIM, 4, RadType>;
+template class Arctangent<PHILIP_DIM, 5, RadType>;
+template class Arctangent<PHILIP_DIM, 8, RadType>;
+
+template class Arctangent<PHILIP_DIM, 1, FadFadType>;
+template class Arctangent<PHILIP_DIM, 2, FadFadType>;
+template class Arctangent<PHILIP_DIM, 3, FadFadType>;
+template class Arctangent<PHILIP_DIM, 4, FadFadType>;
+template class Arctangent<PHILIP_DIM, 5, FadFadType>;
+template class Arctangent<PHILIP_DIM, 8, FadFadType>;
+
+template class Arctangent<PHILIP_DIM, 1, RadFadType>;
+template class Arctangent<PHILIP_DIM, 2, RadFadType>;
+template class Arctangent<PHILIP_DIM, 3, RadFadType>;
+template class Arctangent<PHILIP_DIM, 4, RadFadType>;
+template class Arctangent<PHILIP_DIM, 5, RadFadType>;
+template class Arctangent<PHILIP_DIM, 8, RadFadType>;
 } // PHiLiP namespace

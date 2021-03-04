@@ -8,11 +8,15 @@
 
 namespace PHiLiP {
 /// Additive manufactured solution function.  Derived from ManufacturedSolutionFunction.
-template <int dim, typename real>
-class Even_Polynomial : public ManufacturedSolutionFunction <dim, real>
+template <int dim, int nstate, typename real>
+class Even_Polynomial : public ManufacturedSolutionFunction <dim, nstate, real>
 {
 protected:
     const double poly_max = 7;
+    using dealii::Function<dim,real>::value;
+    using dealii::Function<dim,real>::gradient;
+    using dealii::Function<dim,real>::hessian;
+    using ManufacturedSolutionFunction<dim,nstate,real>::base_values;
 public:
     /// Constructor
     Even_Polynomial ();
@@ -21,13 +25,13 @@ public:
     ~Even_Polynomial () {};
 
     /// Manufactured solution exact value
-    real value (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    real value (const dealii::Point<dim,real> &point, const int istate = 0) const;
 
     /// Gradient of the exact manufactured solution
-    dealii::Tensor<1,dim,real> gradient (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    dealii::Tensor<1,dim,real> gradient (const dealii::Point<dim,real> &point, const int istate = 0) const;
 
     /// Hessian of the exact manufactured solution
-    dealii::SymmetricTensor<2,dim,real> hessian (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    dealii::SymmetricTensor<2,dim,real> hessian (const dealii::Point<dim,real> &point, const int istate = 0) const;
 };
 
 

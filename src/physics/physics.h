@@ -32,13 +32,13 @@ class PhysicsBase
 {
 public:
     /// Default constructor that will set the constants.
-    PhysicsBase();
+    PhysicsBase(const Parameters::ManufacturedConvergenceStudyParam *const parameters_input);
 
     /// Virtual destructor required for abstract classes.
     virtual ~PhysicsBase() = 0;
 
     /// Manufactured solution function
-    std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function;
+    std::shared_ptr< ManufacturedSolutionFunction<dim,nstate,real> > manufactured_solution_function;
 
     /// Convective fluxes that will be differentiated once in space.
     virtual std::array<dealii::Tensor<1,dim,real>,nstate> convective_flux (

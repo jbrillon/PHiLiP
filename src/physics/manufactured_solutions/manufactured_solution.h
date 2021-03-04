@@ -1,15 +1,15 @@
 #ifndef __MANUFACTUREDSOLUTIONFUNCTION_H__
 #define __MANUFACTUREDSOLUTIONFUNCTION_H__
 
-#include "ADTypes.hpp" // Included to clean up end of code
+// #include "ADTypes.hpp" // Included to clean up end of code
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/base/function.h>
 
 // Added by Julien for the bool functions
-#include <Sacado.hpp>
-#include <deal.II/base/function.templates.h> // Needed to instantiate dealii::Function<PHILIP_DIM,Sacado::Fad::DFad<double>>
-#include <deal.II/base/function_time.templates.h> // Needed to instantiate dealii::Function<PHILIP_DIM,Sacado::Fad::DFad<double>>
+// #include <Sacado.hpp>
+// #include <deal.II/base/function.templates.h> // Needed to instantiate dealii::Function<PHILIP_DIM,Sacado::Fad::DFad<double>>
+// #include <deal.II/base/function_time.templates.h> // Needed to instantiate dealii::Function<PHILIP_DIM,Sacado::Fad::DFad<double>>
 
 //#include <Sacado.hpp>
 //
@@ -19,23 +19,46 @@
 
 
 namespace PHiLiP {
+// ///< Provide isfinite for double.
+// bool isfinite(double);
+
+// ///< Provide isfinite for FadType
+// bool isfinite(Sacado::Fad::DFad<double>);
+
+// ///< Provide isfinite for FadFadType
+// bool isfinite(Sacado::Fad::DFad<Sacado::Fad::DFad<double>>);
+
+// ///< Provide isfinite for RadFadType
+// bool isfinite(Sacado::Rad::ADvar<Sacado::Fad::DFad<double>>);
+
 ///< Provide isfinite for double.
-bool isfinite(double);
+bool isfinite(double value)
+{
+    return std::isfinite(static_cast<double>(value));
+}
 
 ///< Provide isfinite for FadType
-bool isfinite(Sacado::Fad::DFad<double>);
+bool isfinite(Sacado::Fad::DFad<double> value)
+{
+    return std::isfinite(static_cast<double>(value.val()));
+}
 
 ///< Provide isfinite for FadFadType
-bool isfinite(Sacado::Fad::DFad<Sacado::Fad::DFad<double>>);
+bool isfinite(Sacado::Fad::DFad<Sacado::Fad::DFad<double>> value)
+{
+    return std::isfinite(static_cast<double>(value.val().val()));
+}
 
 ///< Provide isfinite for RadFadType
-bool isfinite(Sacado::Rad::ADvar<Sacado::Fad::DFad<double>>);
-
+bool isfinite(Sacado::Rad::ADvar<Sacado::Fad::DFad<double>> value)
+{
+    return std::isfinite(static_cast<double>(value.val().val()));
+}
 
 /// Manufactured solution used for grid studies to check convergence orders.
 /** This class also provides derivatives necessary to evaluate source terms.
  */
-template <int dim, typename real>
+template <int dim, int nstate, typename real>
 class ManufacturedSolutionFunction : public dealii::Function<dim,real>
 {
 // We want the Point to be templated on the type,
@@ -48,15 +71,20 @@ protected:
     using dealii::Function<dim,real>::gradient;
     using dealii::Function<dim,real>::hessian;
     using dealii::Function<dim,real>::vector_gradient;
-
+    ///@{
+    /** Constants used to manufactured solution.
+     */
+    std::vector<double> base_values;
+    std::vector<double> amplitudes;
+    std::vector<dealii::Tensor<1,dim,real>> frequencies;
+    //@}
 public:
-    const unsigned int nstate; ///< Corresponds to n_components in the dealii::Function
     /// Constructor that initializes base_values, amplitudes, frequencies.
     /** Calls the Function(const unsigned int n_components) constructor in deal.II
      *  This sets the public attribute n_components = nstate, which can then be accessed
      *  by all the other functions
      */
-    ManufacturedSolutionFunction (const unsigned int nstate = 1);
+    ManufacturedSolutionFunction ();
 
     /// Virtual destructor required for abstract classes.
     virtual ~ManufacturedSolutionFunction() {}; // Double check with Doug
@@ -66,8 +94,8 @@ public:
      *  u[s] = A[s]*sin(freq[s][0]*x)*sin(freq[s][1]*y)*sin(freq[s][2]*z);
      *  \endcode
      */
-    virtual real value (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
-
+    virtual real value (const dealii::Point<dim,real> &point, const int istate = 0) const = 0;
+    
     /// Gradient of the exact manufactured solution
     /** \code
      *  grad_u[s][0] = A[s]*freq[s][0]*cos(freq[s][0]*x)*sin(freq[s][1]*y)*sin(freq[s][2]*z);
@@ -75,10 +103,10 @@ public:
      *  grad_u[s][2] = A[s]*freq[s][2]*sin(freq[s][0]*x)*sin(freq[s][1]*y)*cos(freq[s][2]*z);
      *  \endcode
      */
-    virtual dealii::Tensor<1,dim,real> gradient (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
+    virtual dealii::Tensor<1,dim,real> gradient (const dealii::Point<dim,real> &point, const int istate = 0) const = 0;
 
     /// Uses finite-difference to evaluate the gradient
-    dealii::Tensor<1,dim,real> gradient_fd (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    dealii::Tensor<1,dim,real> gradient_fd (const dealii::Point<dim,real> &point, const int istate = 0) const;
 
     /// Hessian of the exact manufactured solution
     /** \code
@@ -97,10 +125,10 @@ public:
      *
      *  Note that this term is symmetric since \f$\frac{\partial u }{\partial x \partial y} = \frac{\partial u }{\partial y \partial x} \f$
      */
-    virtual dealii::SymmetricTensor<2,dim,real> hessian (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
+    virtual dealii::SymmetricTensor<2,dim,real> hessian (const dealii::Point<dim,real> &point, const int istate = 0) const = 0;
 
     /// Uses finite-difference to evaluate the hessian
-    dealii::SymmetricTensor<2,dim,real> hessian_fd (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    dealii::SymmetricTensor<2,dim,real> hessian_fd (const dealii::Point<dim,real> &point, const int istate = 0) const;
 
     /// Same as Function::values() except it returns it into a std::vector format.
     std::vector<real> stdvector_values (const dealii::Point<dim,real> &point) const;
@@ -140,15 +168,6 @@ public:
   
     // virtual void vector_gradient_list (const std::vector<Point<dim,real> > &points,
     //                                   std::vector<std::vector<Tensor<1,dim, real> > > &gradients) const;
-
-private:
-    ///@{
-    /** Constants used to manufactured solution.
-     */
-    std::vector<double> base_values;
-    std::vector<double> amplitudes;
-    std::vector<dealii::Tensor<1,dim,real>> frequencies;
-    //@}
 };
 
 }

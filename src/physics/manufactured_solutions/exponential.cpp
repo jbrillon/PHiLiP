@@ -3,9 +3,9 @@
 #include "exponential.h"
 
 namespace PHiLiP {
-template <int dim, typename real>
-inline real Exponential<dim,real>
-::value (const dealii::Point<dim,real> &point, const unsigned int istate) const
+template <int dim, int nstate, typename real>
+inline real Exponential<dim,nstate,real>
+::value (const dealii::Point<dim,real> &point, const int istate) const
 {
 	real value = 0.0;
     for (int d=0; d<dim; d++) {
@@ -16,9 +16,9 @@ inline real Exponential<dim,real>
     return value;
 }
 
-template <int dim, typename real>
-inline dealii::Tensor<1,dim,real> Exponential<dim,real>
-::gradient (const dealii::Point<dim,real> &point, const unsigned int istate) const
+template <int dim, int nstate, typename real>
+inline dealii::Tensor<1,dim,real> Exponential<dim,nstate,real>
+::gradient (const dealii::Point<dim,real> &point, const int /*istate*/) const
 {
 	dealii::Tensor<1,dim,real> gradient;
 	
@@ -38,9 +38,9 @@ inline dealii::Tensor<1,dim,real> Exponential<dim,real>
 	return gradient;	
 }
 
-template <int dim, typename real>
-inline dealii::SymmetricTensor<2,dim,real> Exponential<dim,real>
-::hessian (const dealii::Point<dim,real> &point, const unsigned int istate) const
+template <int dim, int nstate, typename real>
+inline dealii::SymmetricTensor<2,dim,real> Exponential<dim,nstate,real>
+::hessian (const dealii::Point<dim,real> &point, const int /*istate*/) const
 {
     dealii::SymmetricTensor<2,dim,real> hessian;
 
@@ -71,10 +71,39 @@ inline dealii::SymmetricTensor<2,dim,real> Exponential<dim,real>
     return hessian;
 }
 
-template class Exponential<PHILIP_DIM, double>;
-template class Exponential<PHILIP_DIM, FadType >;
-template class Exponential<PHILIP_DIM, RadType >;
-template class Exponential<PHILIP_DIM, FadFadType >;
-template class Exponential<PHILIP_DIM, RadFadType >;
+template class Exponential<PHILIP_DIM, 1, double>;
+template class Exponential<PHILIP_DIM, 2, double>;
+template class Exponential<PHILIP_DIM, 3, double>;
+template class Exponential<PHILIP_DIM, 4, double>;
+template class Exponential<PHILIP_DIM, 5, double>;
+template class Exponential<PHILIP_DIM, 8, double>;
+
+template class Exponential<PHILIP_DIM, 1, FadType>;
+template class Exponential<PHILIP_DIM, 2, FadType>;
+template class Exponential<PHILIP_DIM, 3, FadType>;
+template class Exponential<PHILIP_DIM, 4, FadType>;
+template class Exponential<PHILIP_DIM, 5, FadType>;
+template class Exponential<PHILIP_DIM, 8, FadType>;
+
+template class Exponential<PHILIP_DIM, 1, RadType>;
+template class Exponential<PHILIP_DIM, 2, RadType>;
+template class Exponential<PHILIP_DIM, 3, RadType>;
+template class Exponential<PHILIP_DIM, 4, RadType>;
+template class Exponential<PHILIP_DIM, 5, RadType>;
+template class Exponential<PHILIP_DIM, 8, RadType>;
+
+template class Exponential<PHILIP_DIM, 1, FadFadType>;
+template class Exponential<PHILIP_DIM, 2, FadFadType>;
+template class Exponential<PHILIP_DIM, 3, FadFadType>;
+template class Exponential<PHILIP_DIM, 4, FadFadType>;
+template class Exponential<PHILIP_DIM, 5, FadFadType>;
+template class Exponential<PHILIP_DIM, 8, FadFadType>;
+
+template class Exponential<PHILIP_DIM, 1, RadFadType>;
+template class Exponential<PHILIP_DIM, 2, RadFadType>;
+template class Exponential<PHILIP_DIM, 3, RadFadType>;
+template class Exponential<PHILIP_DIM, 4, RadFadType>;
+template class Exponential<PHILIP_DIM, 5, RadFadType>;
+template class Exponential<PHILIP_DIM, 8, RadFadType>;
 
 } // PHiLiP namespace

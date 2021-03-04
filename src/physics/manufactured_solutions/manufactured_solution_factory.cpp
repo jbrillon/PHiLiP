@@ -4,9 +4,9 @@
 
 namespace PHiLiP {
 
-template <int dim, typename real>
-std::shared_ptr < ManufacturedSolutionFunction<dim,real> >
-ManufacturedSolutionFactory<dim,real>
+template <int dim, int nstate, typename real>
+std::shared_ptr < ManufacturedSolutionFunction<dim,nstate,real> >
+ManufacturedSolutionFactory<dim,nstate,real>
 ::create_ManufacturedSolution(const Parameters::ManufacturedConvergenceStudyParam *const parameters_input)
 {
 	// MST abbreviated ManufacturedSolutionType
@@ -15,30 +15,59 @@ ManufacturedSolutionFactory<dim,real>
 	MST_enum manufactured_solution_type = parameters_input->manufactured_solution_type;
 
 	if (manufactured_solution_type == MST_enum::sine){
-		return std::make_shared < Sine<dim,real>;
+		return std::make_shared < Sine<dim,nstate,real> >();
 	} else if (manufactured_solution_type == MST_enum::additive){
-		return std::make_shared < Additive<dim,real>;
+		return std::make_shared < Additive<dim,nstate,real> >();
 	} else if (manufactured_solution_type == MST_enum::cosine){
-		return std::make_shared < Cosine<dim,real>;
+		return std::make_shared < Cosine<dim,nstate,real> >();
 	} else if (manufactured_solution_type == MST_enum::arctangent){
-		return std::make_shared < Arctangent<dim,real>;
+		return std::make_shared < Arctangent<dim,nstate,real> >();
 	} else if (manufactured_solution_type == MST_enum::exponential){
-		return std::make_shared < Exponential<dim,real>;
+		return std::make_shared < Exponential<dim,nstate,real> >();
 	} else if (manufactured_solution_type == MST_enum::even_polynomial){
-		return std::make_shared < Even_Polynomial<dim,real>;
+		return std::make_shared < Even_Polynomial<dim,nstate,real> >();
 	} else if (manufactured_solution_type == MST_enum::polynomial){
-		return std::make_shared < Polynomial<dim,real>;
+		return std::make_shared < Polynomial<dim,nstate,real> >();
 	}
 	std::cout << "Can't create ManufacturedSolutionFunction, invalid manufactured solution type: " << manufactured_solution_type << std::endl;
     assert(0==1 && "Can't create ManufacturedSolutionFunction, invalid manufactured solution type");
     return nullptr;
 }
 
-template class ManufacturedSolutionFactory<PHILIP_DIM, double>;
-template class ManufacturedSolutionFactory<PHILIP_DIM, FadType >;
-template class ManufacturedSolutionFactory<PHILIP_DIM, RadType >;
-template class ManufacturedSolutionFactory<PHILIP_DIM, FadFadType >;
-template class ManufacturedSolutionFactory<PHILIP_DIM, RadFadType >;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 1, double>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 2, double>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 3, double>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 4, double>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 5, double>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 8, double>;
+
+template class ManufacturedSolutionFactory<PHILIP_DIM, 1, FadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 2, FadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 3, FadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 4, FadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 5, FadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 8, FadType>;
+
+template class ManufacturedSolutionFactory<PHILIP_DIM, 1, RadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 2, RadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 3, RadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 4, RadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 5, RadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 8, RadType>;
+
+template class ManufacturedSolutionFactory<PHILIP_DIM, 1, FadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 2, FadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 3, FadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 4, FadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 5, FadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 8, FadFadType>;
+
+template class ManufacturedSolutionFactory<PHILIP_DIM, 1, RadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 2, RadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 3, RadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 4, RadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 5, RadFadType>;
+template class ManufacturedSolutionFactory<PHILIP_DIM, 8, RadFadType>;
 
 
 } // PHiLiP namespace

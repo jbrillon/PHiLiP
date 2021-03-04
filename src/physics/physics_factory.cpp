@@ -18,20 +18,24 @@ PhysicsFactory<dim,nstate,real>
 ::create_Physics(const Parameters::AllParameters *const parameters_input)
 {
     using PDE_enum = Parameters::AllParameters::PartialDifferentialEquation;
-
     PDE_enum pde_type = parameters_input->pde_type;
 
+    // MST abbreviated ManufacturedSolutionType
+    using MST_enum = Parameters::ManufacturedConvergenceStudyParam;
+    MST_enum manufactured_convergence_study_param = parameters_input->manufactured_convergence_study_param;
+
     if (pde_type == PDE_enum::advection || pde_type == PDE_enum::advection_vector) {
-        if constexpr (nstate<=2) return std::make_shared < ConvectionDiffusion<dim,nstate,real> >(true,false);
+        if constexpr (nstate<=2) return std::make_shared < ConvectionDiffusion<dim,nstate,real> >(manufactured_convergence_study_param,true,false);
     } else if (pde_type == PDE_enum::diffusion) {
-        if constexpr (nstate==1) return std::make_shared < ConvectionDiffusion<dim,nstate,real> >(false,true);
+        if constexpr (nstate==1) return std::make_shared < ConvectionDiffusion<dim,nstate,real> >(manufactured_convergence_study_param,false,true);
     } else if (pde_type == PDE_enum::convection_diffusion) {
-        if constexpr (nstate==1) return std::make_shared < ConvectionDiffusion<dim,nstate,real> >(true,true);
+        if constexpr (nstate==1) return std::make_shared < ConvectionDiffusion<dim,nstate,real> >(manufactured_convergence_study_param,true,true);
     } else if (pde_type == PDE_enum::burgers_inviscid) {
-        if constexpr (nstate==dim) return std::make_shared < Burgers<dim,nstate,real> >(true,false);
+        if constexpr (nstate==dim) return std::make_shared < Burgers<dim,nstate,real> >(manufactured_convergence_study_param,true,false);
     } else if (pde_type == PDE_enum::euler) {
         if constexpr (nstate==dim+2) {
-            return std::make_shared < Euler<dim,nstate,real> > (parameters_input->euler_param.ref_length 
+            return std::make_shared < Euler<dim,nstate,real> > (manufactured_convergence_study_param
+                                                               ,parameters_input->euler_param.ref_length 
                                                                ,parameters_input->euler_param.gamma_gas
                                                                ,parameters_input->euler_param.mach_inf
                                                                ,parameters_input->euler_param.angle_of_attack
@@ -39,7 +43,8 @@ PhysicsFactory<dim,nstate,real>
         }
 
     } else if (pde_type == PDE_enum::mhd) {
-        if constexpr (nstate == 8) return std::make_shared < MHD<dim,nstate,real> > (parameters_input->euler_param.gamma_gas);
+        if constexpr (nstate == 8) return std::make_shared < MHD<dim,nstate,real> > (manufactured_convergence_study_param,
+                                                                                    parameters_input->euler_param.gamma_gas);
     }
     std::cout << "Can't create PhysicsBase, invalid PDE type: " << pde_type << std::endl;
     assert(0==1 && "Can't create PhysicsBase, invalid PDE type");

@@ -77,11 +77,12 @@ class Euler : public PhysicsBase <dim, nstate, real>
 {
 public:
     /// Constructor
-    Euler ( const double ref_length,
+    Euler ( const Parameters::ManufacturedConvergenceStudyParam *const parameters_input,
+            const double ref_length,
             const double gamma_gas,
             const double mach_inf,
             const double angle_of_attack,
-            const double side_slip_angle);
+            const double side_slip_angle) : PhysicsBase<dim,nstate,real>(parameters_input) {};
 
     const double ref_length; ///< Reference length.
     const double gam; ///< Constant heat capacity ratio of fluid.
