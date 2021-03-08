@@ -57,6 +57,9 @@ ManufacturedSolutionFunction<dim,nstate,real>
 }
 
 // template <int dim, int nstate, typename real>
+// ManufacturedSolutionFunction<dim,nstate,real>::~ManufacturedSolutionFunction() {}
+
+// template <int dim, int nstate, typename real>
 // inline dealii::Tensor<1,dim,real> ManufacturedSolutionFunction<dim,nstate,real>
 // ::gradient (const dealii::Point<dim,real> &point, const int istate) const
 // {

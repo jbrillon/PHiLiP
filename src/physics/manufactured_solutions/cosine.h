@@ -20,7 +20,7 @@ protected:
     using ManufacturedSolutionFunction<dim,nstate,real>::frequencies;
 public:
     /// Constructor
-    Cosine ();
+    Cosine () {};
 
     /// Destructor
     ~Cosine () {};

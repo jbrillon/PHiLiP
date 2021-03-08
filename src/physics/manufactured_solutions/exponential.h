@@ -18,7 +18,7 @@ protected:
     using ManufacturedSolutionFunction<dim,nstate,real>::base_values;
 public:
     /// Constructor
-    Exponential ();
+    Exponential () {};
 
     /// Destructor
     ~Exponential () {};

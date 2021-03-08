@@ -7,12 +7,12 @@ namespace PHiLiP {
 template <int dim, int nstate, typename real>
 std::shared_ptr < ManufacturedSolutionFunction<dim,nstate,real> >
 ManufacturedSolutionFactory<dim,nstate,real>
-::create_ManufacturedSolution(const Parameters::ManufacturedConvergenceStudyParam *const parameters_input)
+::create_ManufacturedSolution(const Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType manu_sol_type_input)
 {
 	// MST abbreviated ManufacturedSolutionType
 	using MST_enum = Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType;
 
-	MST_enum manufactured_solution_type = parameters_input->manufactured_solution_type;
+	MST_enum manufactured_solution_type = manu_sol_type_input;
 
 	if (manufactured_solution_type == MST_enum::sine){
 		return std::make_shared < Sine<dim,nstate,real> >();

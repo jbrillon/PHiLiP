@@ -1,5 +1,4 @@
 SET(SOURCE
-    manufactured_solution_factory.cpp
     manufactured_solution.cpp
     additive.cpp
     arctangent.cpp
@@ -8,6 +7,7 @@ SET(SOURCE
     exponential.cpp
     polynomial.cpp
     sine.cpp
+    manufactured_solution_factory.cpp
     )
 
 foreach(dim RANGE 1 3)

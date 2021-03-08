@@ -30,13 +30,13 @@ namespace PHiLiP {
 
 // ///< Provide isfinite for RadFadType
 // bool isfinite(Sacado::Rad::ADvar<Sacado::Fad::DFad<double>>);
-
+template<typename real>
 ///< Provide isfinite for double.
-bool isfinite(double value)
+bool isfinite(real value)
 {
     return std::isfinite(static_cast<double>(value));
 }
-
+#if 0
 ///< Provide isfinite for FadType
 bool isfinite(Sacado::Fad::DFad<double> value)
 {
@@ -54,6 +54,7 @@ bool isfinite(Sacado::Rad::ADvar<Sacado::Fad::DFad<double>> value)
 {
     return std::isfinite(static_cast<double>(value.val().val()));
 }
+#endif
 
 /// Manufactured solution used for grid studies to check convergence orders.
 /** This class also provides derivatives necessary to evaluate source terms.
@@ -87,7 +88,7 @@ public:
     ManufacturedSolutionFunction ();
 
     /// Virtual destructor required for abstract classes.
-    virtual ~ManufacturedSolutionFunction() {}; // Double check with Doug
+    virtual ~ManufacturedSolutionFunction() {};
   
     /// Manufactured solution exact value
     /** \code

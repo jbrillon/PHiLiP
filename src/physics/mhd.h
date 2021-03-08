@@ -77,16 +77,15 @@ class MHD : public PhysicsBase <dim, nstate, real>
 {
 public:
     /// Constructor
-    MHD (const Parameters::ManufacturedConvergenceStudyParam *const parameters_input,
-        const double gamma_gas)
-    : PhysicsBase<dim,nstate,real>(parameters_input), gam(gamma_gas), gamm1(gam-1.0)
+    MHD (const Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType manu_sol_type_input,
+         const double gamma_gas)
+    : PhysicsBase<dim,nstate,real>(manu_sol_type_input), gam(gamma_gas), gamm1(gam-1.0)
     {
         static_assert(nstate==8, "Physics::MHD() should be created with nstate=8");
 
     };
     /// Destructor
-    ~MHD ()
-    {};
+    ~MHD () {};
 
     /// Constant heat capacity ratio of air
     const double gam;

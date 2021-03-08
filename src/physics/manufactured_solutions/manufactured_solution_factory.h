@@ -22,7 +22,7 @@ class ManufacturedSolutionFactory
 public:
     /// Factory to return the correct manufactured solution given input file.
     static std::shared_ptr< ManufacturedSolutionFunction<dim,nstate,real> >
-        create_ManufacturedSolution(const Parameters::ManufacturedConvergenceStudyParam *const parameters_input);
+        create_ManufacturedSolution(const Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType manu_sol_type_input);
 };
 
 

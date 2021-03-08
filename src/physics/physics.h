@@ -32,7 +32,7 @@ class PhysicsBase
 {
 public:
     /// Default constructor that will set the constants.
-    PhysicsBase(const Parameters::ManufacturedConvergenceStudyParam *const parameters_input);
+    PhysicsBase(const Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType manu_sol_type_input);
 
     /// Virtual destructor required for abstract classes.
     virtual ~PhysicsBase() = 0;

@@ -11,8 +11,8 @@ namespace Physics {
 
 template <int dim, int nstate, typename real>
 PhysicsBase<dim,nstate,real>::PhysicsBase(
-    const Parameters::ManufacturedConvergenceStudyParam *const parameters_input)
-    : manufactured_solution_function(ManufacturedSolutionFactory<dim,nstate,real>::create_ManufacturedSolution(parameters_input))
+    const Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType manu_sol_type_input)
+    : manufactured_solution_function(ManufacturedSolutionFactory<dim,nstate,real>::create_ManufacturedSolution(manu_sol_type_input))
     , diffusion_tensor(eval_diffusion_tensor())
 { }
 // 
@@ -61,6 +61,9 @@ dealii::Tensor<2,dim,double> PhysicsBase<dim,nstate,real>::eval_diffusion_tensor
     //
     return tensor;
 }
+
+template <int dim, int nstate, typename real>
+PhysicsBase<dim,nstate,real>::~PhysicsBase() {}
 
 template <int dim, int nstate, typename real>
 std::array<dealii::Tensor<1,dim,real>,nstate> PhysicsBase<dim,nstate,real>

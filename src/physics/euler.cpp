@@ -11,13 +11,13 @@ namespace PHiLiP {
 namespace Physics {
 
 template <int dim, int nstate, typename real>
-Euler<dim,nstate,real>::Euler ( const Parameters::ManufacturedConvergenceStudyParam *const parameters_input,
+Euler<dim,nstate,real>::Euler ( const Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType manu_sol_type_input,
                                 const double ref_length,
                                 const double gamma_gas,
                                 const double mach_inf,
                                 const double angle_of_attack,
                                 const double side_slip_angle)
-    : PhysicsBase<dim,nstate,real>(parameters_input)
+    : PhysicsBase<dim,nstate,real>(manu_sol_type_input)
     , ref_length(ref_length)
     , gam(gamma_gas)
     , gamm1(gam-1.0)
@@ -56,7 +56,6 @@ Euler<dim,nstate,real>::Euler ( const Parameters::ManufacturedConvergenceStudyPa
 
     double velocity_inf_sqr = 1.0;
     dynamic_pressure_inf = 0.5 * density_inf * velocity_inf_sqr;
-
 }
 
 template <int dim, int nstate, typename real>

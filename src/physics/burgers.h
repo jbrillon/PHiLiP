@@ -40,10 +40,10 @@ public:
 
     /// Constructor
     Burgers (
-        const Parameters::ManufacturedConvergenceStudyParam *const parameters_input,
+        const Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType manu_sol_type_input,
         const bool convection = true, 
         const bool diffusion = true)
-        : PhysicsBase<dim,nstate,real>(parameters_input), hasConvection(convection), hasDiffusion(diffusion)
+        : PhysicsBase<dim,nstate,real>(manu_sol_type_input), hasConvection(convection), hasDiffusion(diffusion)
     {
         static_assert(nstate==dim, "Physics::Burgers() should be created with nstate==dim");
     };

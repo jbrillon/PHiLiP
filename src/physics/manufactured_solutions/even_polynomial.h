@@ -19,7 +19,7 @@ protected:
     using ManufacturedSolutionFunction<dim,nstate,real>::base_values;
 public:
     /// Constructor
-    Even_Polynomial ();
+    Even_Polynomial () {};
 
     /// Destructor
     ~Even_Polynomial () {};

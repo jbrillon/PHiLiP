@@ -19,7 +19,7 @@ protected:
     using dealii::Function<dim,real>::hessian;
 public:
     /// Constructor
-    Arctangent ();
+    Arctangent () {};
 
     /// Destructor
     ~Arctangent () {};

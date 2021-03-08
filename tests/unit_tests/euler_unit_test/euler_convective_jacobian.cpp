@@ -7,6 +7,9 @@
 
 #include "assert_compare_array.h"
 #include "parameters/parameters.h"
+// #include "parameters/all_parameters.h"
+// #include "physics/physics.h"
+// #include "physics/physics_factory.h"
 #include "physics/euler.h"
 
 const double TOLERANCE = 1E-6;
@@ -17,9 +20,12 @@ int main (int /*argc*/, char * /*argv*/[])
     const int dim = PHILIP_DIM;
     const int nstate = dim+2;
 
+    using MST_enum = PHiLiP::Parameters::ManufacturedConvergenceStudyParam::ManufacturedSolutionType;
+    MST_enum manu_sol_type = MST_enum::exponential;
+
     //const double ref_length = 1.0, mach_inf=1.0, angle_of_attack = 0.0, side_slip_angle = 0.0, gamma_gas = 1.4;
     const double a = 1.0 , b = 0.0, c = 1.4;
-    PHiLiP::Physics::Euler<dim, nstate, double> euler_physics = PHiLiP::Physics::Euler<dim, nstate, double>(a,c,a,b,b);
+    PHiLiP::Physics::Euler<dim, nstate, double> euler_physics = PHiLiP::Physics::Euler<dim, nstate, double>(manu_sol_type,a,c,a,b,b);
 
     const double min = 0;
     const double max = 1.0;

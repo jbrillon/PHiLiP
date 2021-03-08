@@ -18,7 +18,7 @@ protected:
     using ManufacturedSolutionFunction<dim,nstate,real>::base_values;
 public:
     /// Constructor
-    Polynomial ();
+    Polynomial () {};
 
     /// Destructor
     ~Polynomial () {};

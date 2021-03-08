@@ -16,6 +16,7 @@ foreach(dim RANGE 1 3)
     add_dependencies(${dim}D ${TEST_TARGET})
 
     # Library dependency
+    target_link_libraries(${TEST_TARGET} ParametersLibrary)
     string(CONCAT PhysicsLib Physics_${dim}D)
     target_link_libraries(${TEST_TARGET} ${PhysicsLib})
     # Setup target with deal.II
@@ -52,6 +53,7 @@ foreach(dim RANGE 1 3)
     add_dependencies(${dim}D ${TEST_TARGET})
 
     # Library dependency
+    target_link_libraries(${TEST_TARGET} ParametersLibrary)
     string(CONCAT PhysicsLib Physics_${dim}D)
     target_link_libraries(${TEST_TARGET} ${PhysicsLib})
     # Setup target with deal.II
@@ -88,6 +90,7 @@ foreach(dim RANGE 1 3)
     add_dependencies(${dim}D ${TEST_TARGET})
 
     # Library dependency
+    target_link_libraries(${TEST_TARGET} ParametersLibrary)
     string(CONCAT PhysicsLib Physics_${dim}D)
     target_link_libraries(${TEST_TARGET} ${PhysicsLib})
     # Setup target with deal.II
