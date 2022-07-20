@@ -680,6 +680,10 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
     dealii::LinearAlgebra::distributed::Vector<double> &rhs,
     std::array<dealii::LinearAlgebra::distributed::Vector<double>,dim> &rhs_aux)
 {
+    const bool use_weak_form = this->all_parameters->use_weak_form;
+    using ODE_enum = Parameters::ODESolverParam::ODESolverEnum;
+    const ODE_enum ode_solver_type = this->all_parameters->ode_solver_param.ode_solver_type;
+
     std::vector<dealii::types::global_dof_index> current_dofs_indices;
     std::vector<dealii::types::global_dof_index> neighbor_dofs_indices;
 
@@ -704,8 +708,7 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
     const unsigned int poly_degree = i_fele;
 
     // strong form only for explicit time advancement
-    const bool use_strong_form = ((!this->all_parameters->use_weak_form) 
-           && (this->all_parameters->ode_solver_param.ode_solver_type == Parameters::ODESolverParam::ODESolverEnum::explicit_solver));
+    const bool use_strong_form = ((!use_weak_form) && (ode_solver_type == ODE_enum::explicit_solver));
 
     if(use_strong_form)//only for strong form explicit
     {
@@ -782,9 +785,7 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
     }
 
     //flag to terminate if strong form and implicit
-    if((this->all_parameters->use_weak_form==false) 
-       && (this->all_parameters->ode_solver_param.ode_solver_type
-                    == Parameters::ODESolverParam::ODESolverEnum::implicit_solver))
+    if((!use_weak_form) && (ode_solver_type == ODE_enum::implicit_solver))
     {
         pcout<<"ERROR: Implicit does not currently work for strong form."<<std::endl;
         exit(1);
@@ -824,7 +825,7 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
             current_cell_rhs,
             fe_values_lagrange);
         
-        // set current rhs to zero since the explicit call was just to set the max_dt_cell.
+        // Set current RHS to zero since the explicit call was just to set the max_dt_cell.
         current_cell_rhs*=0.0;
      
         assemble_volume_term_derivatives (
@@ -855,7 +856,7 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
         }
 
         // CASE 1: FACE AT BOUNDARY
-        if (current_face->at_boundary() && !current_cell->has_periodic_neighbor(iface) ) 
+        if(current_face->at_boundary() && !current_cell->has_periodic_neighbor(iface)) 
         {
             // don't need to re-evaluate the facet basis in strong form
             if(!use_strong_form){
@@ -886,11 +887,11 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
                 const unsigned int fe_index_neigh_cell = neighbor_cell->active_fe_index();
 
                 //check neighbour cell face on boundary
-                auto neigh_face_check = neighbor_cell->face(neighbor_face_no);
-                if(!neigh_face_check->at_boundary()){
+                auto neighbor_face_check = neighbor_cell->face(neighbor_face_no);
+                if(!neighbor_face_check->at_boundary()){
                     pcout<<"FACE NOT ON BOUNDARY"<<std::endl;
                     exit(1);
-                } 
+                }
 
                 const dealii::FESystem<dim,dim> &neigh_fe_ref = fe_collection[fe_index_neigh_cell];
                 const unsigned int n_dofs_neigh_cell = neigh_fe_ref.n_dofs_per_cell();
