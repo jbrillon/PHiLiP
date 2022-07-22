@@ -708,7 +708,8 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
     const unsigned int poly_degree = i_fele;
 
     // strong form only for explicit time advancement
-    const bool use_strong_form = ((!use_weak_form) && (ode_solver_type == ODE_enum::explicit_solver));
+    const bool use_strong_form = ((!this->all_parameters->use_weak_form) 
+           && (this->all_parameters->ode_solver_param.ode_solver_type == Parameters::ODESolverParam::ODESolverEnum::explicit_solver));
 
     if(use_strong_form)//only for strong form explicit
     {
@@ -887,11 +888,11 @@ void DGBase<dim,real,MeshType>::assemble_cell_residual (
                 const unsigned int fe_index_neigh_cell = neighbor_cell->active_fe_index();
 
                 //check neighbour cell face on boundary
-                auto neighbor_face_check = neighbor_cell->face(neighbor_face_no);
-                if(!neighbor_face_check->at_boundary()){
+                auto neigh_face_check = neighbor_cell->face(neighbor_face_no);
+                if(!neigh_face_check->at_boundary()){
                     pcout<<"FACE NOT ON BOUNDARY"<<std::endl;
                     exit(1);
-                }
+                } 
 
                 const dealii::FESystem<dim,dim> &neigh_fe_ref = fe_collection[fe_index_neigh_cell];
                 const unsigned int n_dofs_neigh_cell = neigh_fe_ref.n_dofs_per_cell();
