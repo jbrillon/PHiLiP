@@ -4,6 +4,7 @@
 #include "parameters/all_parameters.h"
 #include "dg/dg.h"
 #include "initial_condition_function.h"
+#include <deal.II/base/table_handler.h>
 
 namespace PHiLiP {
 
@@ -36,6 +37,11 @@ private:
     static void project_initial_condition(
         std::shared_ptr< InitialConditionFunction<dim,nstate,double> > &initial_condition_function,
         std::shared_ptr < PHiLiP::DGBase<dim,real> > &dg); 
+public:
+    /// Project initial condition from file
+    static void project_initial_condition_from_file(
+        std::shared_ptr < PHiLiP::DGBase<dim,real> > &dg,
+        std::shared_ptr <dealii::TableHandler> unsteady_data_table);
 };
 
 }//end PHiLiP namespace
