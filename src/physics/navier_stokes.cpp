@@ -100,7 +100,7 @@ dealii::Tensor<1,dim,real2> NavierStokes<dim,nstate,real>
 template <int dim, int nstate, typename real>
 template<typename real2>
 inline real2 NavierStokes<dim,nstate,real>
-::compute_viscosity_coefficient (const std::array<real2,nstate> &primitive_soln) const
+::compute_viscosity_coefficient (const std::array<real2,nstate> &/*primitive_soln*/) const
 {
     /* Nondimensionalized viscosity coefficient, \mu^{*}
      * Reference: Masatsuka 2018 "I do like CFD", p.148, eq.(4.14.16)
@@ -109,9 +109,9 @@ inline real2 NavierStokes<dim,nstate,real>
      * * Reference: Sutherland, W. (1893), "The viscosity of gases and molecular force", Philosophical Magazine, S. 5, 36, pp. 507-531 (1893)
      * * Values: https://www.cfd-online.com/Wiki/Sutherland%27s_law
      */
-    const real2 temperature = this->template compute_temperature<real2>(primitive_soln); // from Euler
+    // const real2 temperature = this->template compute_temperature<real2>(primitive_soln); // from Euler
 
-    const real2 viscosity_coefficient = ((1.0 + temperature_ratio)/(temperature + temperature_ratio))*pow(temperature,1.5);
+    const real2 viscosity_coefficient = 0.001;/*((1.0 + temperature_ratio)/(temperature + temperature_ratio))*pow(temperature,1.5);*/
     
     return viscosity_coefficient;
 }

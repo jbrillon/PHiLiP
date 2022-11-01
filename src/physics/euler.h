@@ -372,6 +372,15 @@ protected:
         std::array<real,nstate> &soln_bc,
         std::array<dealii::Tensor<1,dim,real>,nstate> &soln_grad_bc) const;
 
+    /// Circular-Couette flow Dirichlet boundary condition
+    void boundary_dirichlet_circular_couette (
+        const dealii::Point<dim, real> &pos,
+        const dealii::Tensor<1,dim,real> &normal_int,
+        const std::array<real,nstate> &soln_int,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &soln_grad_int,
+        std::array<real,nstate> &soln_bc,
+        std::array<dealii::Tensor<1,dim,real>,nstate> &soln_grad_bc) const;
+
     /// Evaluate the manufactured solution boundary conditions.
     virtual void boundary_manufactured_solution (
         const dealii::Point<dim, real> &pos,

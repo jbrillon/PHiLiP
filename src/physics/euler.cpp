@@ -912,6 +912,59 @@ void Euler<dim,nstate,real>
 
 template <int dim, int nstate, typename real>
 void Euler<dim,nstate,real>
+::boundary_dirichlet_circular_couette (
+    const dealii::Point<dim, real> &pos,
+    const dealii::Tensor<1,dim,real> &/*normal_int*/,
+    const std::array<real,nstate> &/*soln_int*/,
+    const std::array<dealii::Tensor<1,dim,real>,nstate> &soln_grad_int,
+    std::array<real,nstate> &soln_bc,
+    std::array<dealii::Tensor<1,dim,real>,nstate> &soln_grad_bc) const
+{
+    // Set primitive values
+    std::array<real,nstate> primitive_boundary_values;
+    primitive_boundary_values[0] = 1.0; // density
+    primitive_boundary_values[nstate-1] = 1.0; // pressure
+    // -- velocities (cartesian)
+    dealii::Tensor<1,dim,real> velocities_bc;
+    for (int d=0; d<dim; d++) {
+        velocities_bc[d] = 0.0;
+    }
+    if constexpr(dim==2) {
+        const real angular_velocity = 1.0;
+        const real inner_radius = 0.5;
+        const real outer_radius = 1.0;
+        const real current_radius = inner_radius;
+        const real C_parameter = angular_velocity/(1.0/(inner_radius*inner_radius) - 1.0/(outer_radius*outer_radius));
+        const real vel_theta = C_parameter*((1.0/current_radius) - (current_radius/outer_radius));
+        // convert from polar to cartesian
+        const real x = pos[0];
+        const real y = pos[1];
+        const real r = sqrt(x*x + y*y);
+        const real theta = atan(y/x);
+        velocities_bc[0] = -r*vel_theta*sin(theta);
+        velocities_bc[1] =  r*vel_theta*cos(theta);
+    } else {
+        std::cout << "ERROR: boundary_dirichlet_circular_couette() is only implemented for 2D. Aborting..." << std::endl;
+        std::abort();
+    }
+    for (int d=0; d<dim; ++d) {
+        primitive_boundary_values[1+d] = velocities_bc[d];
+    }
+
+    // Apply boundary conditions:
+    // -- solution at boundary
+    const std::array<real,nstate> conservative_boundary_values = this->convert_primitive_to_conservative(primitive_boundary_values);
+    for (int istate=0; istate<nstate; ++istate) {
+        soln_bc[istate] = conservative_boundary_values[istate];
+    }
+    // -- gradient of solution at boundary
+    for (int istate=0; istate<nstate; ++istate) {
+        soln_grad_bc[istate] = soln_grad_int[istate];
+    }
+}
+
+template <int dim, int nstate, typename real>
+void Euler<dim,nstate,real>
 ::boundary_manufactured_solution (
     const dealii::Point<dim, real> &pos,
     const dealii::Tensor<1,dim,real> &normal_int,
@@ -1174,6 +1227,10 @@ void Euler<dim,nstate,real>
     else if (boundary_type == 1006) {
         // Slip wall boundary condition
         boundary_slip_wall (normal_int, soln_int, soln_grad_int, soln_bc, soln_grad_bc);
+    } 
+    else if (boundary_type == 1007) {
+        // Circular-Couette flow Dirichlet boundary condition
+        boundary_dirichlet_circular_couette (pos, normal_int, soln_int, soln_grad_int, soln_bc, soln_grad_bc);
     } 
     else {
         std::cout << "Invalid boundary_type: " << boundary_type << std::endl;

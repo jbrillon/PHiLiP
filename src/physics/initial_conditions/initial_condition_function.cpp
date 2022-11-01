@@ -15,6 +15,85 @@ InitialConditionFunction<dim,nstate,real>
 }
 
 // ========================================================
+// IDEAL GAS -- For initializing from primitive variables
+// ========================================================
+template <int dim, int nstate, typename real>
+InitialConditionFunction_IdealGas<dim,nstate,real>
+::InitialConditionFunction_IdealGas (
+    const double       gamma_gas,
+    const double       mach_inf)
+    : InitialConditionFunction<dim,nstate,real>()
+    , gamma_gas(gamma_gas)
+    , mach_inf(mach_inf)
+    , mach_inf_sqr(mach_inf*mach_inf)
+{}
+
+template <int dim, int nstate, typename real>
+real InitialConditionFunction_IdealGas<dim,nstate,real>
+::convert_primitive_to_conversative_value(
+    const dealii::Point<dim,real> &point, const unsigned int istate) const
+{
+    real value = 0.0;
+    if constexpr(dim == 1) {
+        const real rho = this->primitive_value(point,0);
+        const real u   = this->primitive_value(point,1);
+        const real p   = this->primitive_value(point,2);
+
+        // convert primitive to conservative solution
+        if(istate==0) value = rho; // density
+        if(istate==1) value = rho*u; // x-momentum
+        if(istate==2) value = p/(this->gamma_gas-1.0) + 0.5*rho*(u*u); // total energy
+    }
+    else if constexpr(dim == 2) {
+        const real rho = this->primitive_value(point,0);
+        const real u   = this->primitive_value(point,1);
+        const real v   = this->primitive_value(point,2);
+        const real p   = this->primitive_value(point,3);
+
+        // convert primitive to conservative solution
+        if(istate==0) value = rho; // density
+        if(istate==1) value = rho*u; // x-momentum
+        if(istate==2) value = rho*v; // y-momentum
+        if(istate==3) value = p/(this->gamma_gas-1.0) + 0.5*rho*(u*u + v*v); // total energy
+    }
+    else if constexpr(dim == 3) {
+        const real rho = this->primitive_value(point,0);
+        const real u   = this->primitive_value(point,1);
+        const real v   = this->primitive_value(point,2);
+        const real w   = this->primitive_value(point,3);
+        const real p   = this->primitive_value(point,4);
+
+        // convert primitive to conservative solution
+        if(istate==0) value = rho; // density
+        if(istate==1) value = rho*u; // x-momentum
+        if(istate==2) value = rho*v; // y-momentum
+        if(istate==3) value = rho*w; // z-momentum
+        if(istate==4) value = p/(this->gamma_gas-1.0) + 0.5*rho*(u*u + v*v + w*w); // total energy
+    }
+
+    return value;
+}
+
+template <int dim, int nstate, typename real>
+real InitialConditionFunction_IdealGas<dim,nstate,real>
+::get_pressure_from_density_and_temperature(const real density, const real temperature) const
+{
+    // based on freestream nondimensionalization (consistent with Euler class)
+    real pressure = 0.;
+    pressure = density*temperature/(this->gamma_gas*this->mach_inf_sqr);
+    return pressure;
+}
+
+template <int dim, int nstate, typename real>
+inline real InitialConditionFunction_IdealGas<dim, nstate, real>
+::value(const dealii::Point<dim,real> &point, const unsigned int istate) const
+{
+    real value = 0.0;
+    value = this->convert_primitive_to_conversative_value(point,istate);
+    return value;
+}
+
+// ========================================================
 // TAYLOR GREEN VORTEX -- Initial Condition (Uniform density)
 // ========================================================
 template <int dim, int nstate, typename real>
@@ -22,10 +101,7 @@ InitialConditionFunction_TaylorGreenVortex<dim,nstate,real>
 ::InitialConditionFunction_TaylorGreenVortex (
     const double       gamma_gas,
     const double       mach_inf)
-    : InitialConditionFunction<dim,nstate,real>()
-    , gamma_gas(gamma_gas)
-    , mach_inf(mach_inf)
-    , mach_inf_sqr(mach_inf*mach_inf)
+    : InitialConditionFunction_IdealGas<dim,nstate,real>(gamma_gas,mach_inf)
 {}
 
 template <int dim, int nstate, typename real>
@@ -58,39 +134,6 @@ real InitialConditionFunction_TaylorGreenVortex<dim,nstate,real>
             value = 1.0/(this->gamma_gas*this->mach_inf_sqr) + (1.0/16.0)*(cos(2.0*x)+cos(2.0*y))*(cos(2.0*z)+2.0);
         }
     }
-    return value;
-}
-
-template <int dim, int nstate, typename real>
-real InitialConditionFunction_TaylorGreenVortex<dim,nstate,real>
-::convert_primitive_to_conversative_value(
-    const dealii::Point<dim,real> &point, const unsigned int istate) const
-{
-    real value = 0.0;
-    if (dim == 3) {
-        const real rho = primitive_value(point,0);
-        const real u   = primitive_value(point,1);
-        const real v   = primitive_value(point,2);
-        const real w   = primitive_value(point,3);
-        const real p   = primitive_value(point,4);
-
-        // convert primitive to conservative solution
-        if(istate==0) value = rho; // density
-        if(istate==1) value = rho*u; // x-momentum
-        if(istate==2) value = rho*v; // y-momentum
-        if(istate==3) value = rho*w; // z-momentum
-        if(istate==4) value = p/(this->gamma_gas-1.0) + 0.5*rho*(u*u + v*v + w*w); // total energy
-    }
-
-    return value;
-}
-
-template <int dim, int nstate, typename real>
-inline real InitialConditionFunction_TaylorGreenVortex<dim, nstate, real>
-::value(const dealii::Point<dim,real> &point, const unsigned int istate) const
-{
-    real value = 0.0;
-    value = convert_primitive_to_conversative_value(point,istate);
     return value;
 }
 
@@ -370,6 +413,70 @@ real InitialConditionFunction_Zero<dim, nstate, real>
     return 0.0;
 }
 
+// ========================================================
+// CIRCULAR COUETTE INITIAL CONDITION
+// ========================================================
+template <int dim, int nstate, typename real>
+InitialConditionFunction_CircularCouette<dim,nstate,real>
+::InitialConditionFunction_CircularCouette(
+    const double       gamma_gas,
+    const double       mach_inf)
+    : InitialConditionFunction_IdealGas<dim,nstate,real>(gamma_gas,mach_inf)
+{
+    // Nothing to do here yet
+}
+
+template <int dim, int nstate, typename real>
+real InitialConditionFunction_CircularCouette<dim, nstate, real>
+::primitive_value(const dealii::Point<dim,real> &point, const unsigned int istate) const
+{
+    // Note: This is in non-dimensional form (free-stream values as reference)
+    real value = 0.;
+    if constexpr(dim == 2) {
+        if(istate==0) {
+            // density
+            value = 1.0;
+        }
+        if(istate==1) {
+            // x-velocity
+            value = get_velocity_component(point,istate);
+        }
+        if(istate==2) {
+            // y-velocity
+            value = get_velocity_component(point,istate);
+        }
+        if(istate==3) {
+            // pressure
+            value = 1.0; // TO DO: Initialize from temperature
+        }
+    }
+    return value;
+}
+
+template <int dim, int nstate, typename real>
+real InitialConditionFunction_CircularCouette<dim, nstate, real>
+::get_velocity_component(const dealii::Point<dim,real> &point, const unsigned int istate) const
+{
+    real velocity = 0.;
+    // compute velocity parameters
+    const real angular_velocity = 1.0;
+    const real inner_radius = 0.5;
+    const real outer_radius = 1.0;
+    const real C_parameter = angular_velocity/(1.0/(inner_radius*inner_radius) - 1.0/(outer_radius*outer_radius));
+    
+    // convert velocity from polar to cartesian
+    const real x = point[0], y = point[1];
+    const real r = sqrt(x*x + y*y); // current radius
+    const real vel_theta = C_parameter*((1.0/r) - (r/outer_radius));
+    const real theta = atan(y/x);
+    
+    // return appropriate component based on istate
+    if (istate==1) velocity = -r*vel_theta*sin(theta); // x-velocity
+    if (istate==2) velocity =  r*vel_theta*cos(theta); // y-velocity
+
+    return velocity;
+}
+
 // =========================================================
 // Initial Condition Factory
 // =========================================================
@@ -424,6 +531,11 @@ InitialConditionFactory<dim,nstate, real>::create_InitialConditionFunction(
         if constexpr (dim==1 && nstate==1) return std::make_shared<InitialConditionFunction_1DSine<dim,nstate,real> > ();
     } else if (flow_type == FlowCaseEnum::sshock) {
         if constexpr (dim==2 && nstate==1)  return std::make_shared<InitialConditionFunction_Zero<dim,nstate,real> > ();
+    } else if (flow_type == FlowCaseEnum::circular_couette) {
+        if constexpr (dim==2 && nstate==(dim+2))  
+            return std::make_shared<InitialConditionFunction_CircularCouette<dim,nstate,real> > (
+                param->euler_param.gamma_gas,
+                param->euler_param.mach_inf);
     } else {
         std::cout << "Invalid Flow Case Type. You probably forgot to add it to the list of flow cases in initial_condition_function.cpp" << std::endl;
         std::abort();
@@ -445,6 +557,9 @@ template class InitialConditionFunction_BurgersRewienski <PHILIP_DIM, 1, double>
 template class InitialConditionFunction_BurgersInviscid <PHILIP_DIM, 1, double>;
 template class InitialConditionFunction_BurgersInviscidEnergy <PHILIP_DIM, 1, double>;
 #endif
+#if PHILIP_DIM==2
+template class InitialConditionFunction_CircularCouette <PHILIP_DIM, PHILIP_DIM+2, double>;
+#endif
 #if PHILIP_DIM==3
 template class InitialConditionFunction_TaylorGreenVortex <PHILIP_DIM, PHILIP_DIM+2, double>;
 template class InitialConditionFunction_TaylorGreenVortex_Isothermal <PHILIP_DIM, PHILIP_DIM+2, double>;
@@ -459,5 +574,6 @@ template class InitialConditionFunction_Advection <PHILIP_DIM, 1, double>;
 template class InitialConditionFunction_AdvectionEnergy <PHILIP_DIM, 1, double>;
 template class InitialConditionFunction_ConvDiff <PHILIP_DIM, 1, double>;
 template class InitialConditionFunction_ConvDiffEnergy <PHILIP_DIM,1,double>;
+template class InitialConditionFunction_IdealGas <PHILIP_DIM, PHILIP_DIM+2, double>;
 
 } // PHiLiP namespace

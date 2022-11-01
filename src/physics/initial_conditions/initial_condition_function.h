@@ -26,6 +26,37 @@ public:
     virtual real value (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
 };
 
+/// Initial condition function used to initialize an ideal gas flow from primitive values
+template <int dim, int nstate, typename real>
+class InitialConditionFunction_IdealGas : public InitialConditionFunction<dim,nstate,real>
+{
+protected:
+    using dealii::Function<dim,real>::value; ///< dealii::Function we are templating on
+
+public:
+    /// Constructor
+    InitialConditionFunction_IdealGas (
+        const double       gamma_gas = 1.4,
+        const double       mach_inf = 0.1);
+
+    const double gamma_gas; ///< Constant heat capacity ratio of fluid.
+    const double mach_inf; ///< Farfield Mach number.
+    const double mach_inf_sqr; ///< Farfield Mach number squared.
+
+    /// Value of initial condition expressed in terms of conservative variables
+    real value (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const override;
+
+protected:
+    /// Value of initial condition expressed in terms of primitive variables
+    virtual real primitive_value(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const = 0;
+    
+    /// Converts value from: primitive (density, velocity, pressure) to conservative (density, momentum, total energy)
+    real convert_primitive_to_conversative_value(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+
+    /// Converts temperature to pressure using freestream non-dimensionalization (consistent with Euler class)
+    real get_pressure_from_density_and_temperature(const real density, const real temperature) const;
+};
+
 /// Function used to evaluate farfield conservative solution
 template <int dim, int nstate, typename real>
 class FreeStreamInitialConditions : public InitialConditionFunction<dim,nstate,real>
@@ -62,7 +93,7 @@ public:
 
 /// Initial Condition Function: Taylor Green Vortex (uniform density)
 template <int dim, int nstate, typename real>
-class InitialConditionFunction_TaylorGreenVortex : public InitialConditionFunction<dim,nstate,real>
+class InitialConditionFunction_TaylorGreenVortex : public InitialConditionFunction_IdealGas<dim,nstate,real>
 {
 protected:
     using dealii::Function<dim,real>::value; ///< dealii::Function we are templating on
@@ -80,19 +111,9 @@ public:
         const double       gamma_gas = 1.4,
         const double       mach_inf = 0.1);
 
-    const double gamma_gas; ///< Constant heat capacity ratio of fluid.
-    const double mach_inf; ///< Farfield Mach number.
-    const double mach_inf_sqr; ///< Farfield Mach number squared.
-        
-    /// Value of initial condition expressed in terms of conservative variables
-    real value (const dealii::Point<dim,real> &point, const unsigned int istate = 0) const override;
-
 protected:
     /// Value of initial condition expressed in terms of primitive variables
-    real primitive_value(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
-    
-    /// Converts value from: primitive to conservative
-    real convert_primitive_to_conversative_value(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
+    real primitive_value(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const override;
 
     /// Value of initial condition for density
     virtual real density(const dealii::Point<dim,real> &point) const;
@@ -285,6 +306,34 @@ public:
 
     /// Returns zero.
     real value(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const override;
+};
+
+/// Initial Condition Function: Circular-Couette Flow
+template <int dim, int nstate, typename real>
+class InitialConditionFunction_CircularCouette : public InitialConditionFunction_IdealGas<dim,nstate,real>
+{
+protected:
+    using dealii::Function<dim,real>::value; ///< dealii::Function we are templating on
+
+public:
+    /// Constructor for Circular-Couette Flow
+    /** Calls the Function(const unsigned int n_components) constructor in deal.II
+     *  This sets the public attribute n_components = nstate, which can then be accessed
+     *  by all the other functions
+     *  Reference: (1) Vermeire, Brian. "Adaptive implicit-explicit time integration and high-order unstructured methods for implicit large Eddy simulation." (2014).
+     *                 PhD Thesis, McGill University. Section 4.2.3, Equation 4.3.
+     *  These initial conditions are given in nondimensional form (free-stream as reference)
+     */
+    InitialConditionFunction_CircularCouette (
+        const double       gamma_gas = 1.4,
+        const double       mach_inf = 0.1);
+
+protected:
+    /// Value of initial condition expressed in terms of primitive variables
+    real primitive_value(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const override;
+
+    /// Returns velocity component based on istate
+    real get_velocity_component(const dealii::Point<dim,real> &point, const unsigned int istate = 0) const;
 };
 
 /// Initial condition function factory

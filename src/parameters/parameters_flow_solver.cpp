@@ -24,6 +24,7 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                           " advection | "
                           " periodic_1D_unsteady | "
                           " gaussian_bump | "
+                          " circular_couette | "
                           " sshock "),
                           "The type of flow we want to simulate. "
                           "Choices are "
@@ -36,6 +37,7 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                           " advection | "
                           " periodic_1D_unsteady | "
                           " gaussian_bump | "
+                          " circular_couette | "
                           " sshock>. ");
 
         prm.declare_entry("poly_degree", "1",
@@ -157,6 +159,22 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                                   "Number of subdivisions in the z direction for gaussian bump meshes.");
             }
             prm.leave_subsection();
+
+            prm.enter_subsection("circular_shell");
+            {
+                prm.declare_entry("grid_inner_radius", "0.5",
+                                  dealii::Patterns::Double(0, dealii::Patterns::Double::max_double_value),
+                                  "Inner radius of circular shell mesh.");
+
+                prm.declare_entry("grid_outer_radius", "1.0",
+                                  dealii::Patterns::Double(0, dealii::Patterns::Double::max_double_value),
+                                  "Outer radius of circular shell mesh.");
+
+                prm.declare_entry("number_of_cells_in_radial_direction", "8",
+                                  dealii::Patterns::Integer(1, dealii::Patterns::Integer::max_int_value),
+                                  "Number of grid elements in the radial direction for hyper_shell mesh based cases.");
+            }
+            prm.leave_subsection();
         }
         prm.leave_subsection();
 
@@ -207,6 +225,7 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
         else if (flow_case_type_string == "advection")                  {flow_case_type = advection;}
         else if (flow_case_type_string == "periodic_1D_unsteady")       {flow_case_type = periodic_1D_unsteady;}
         else if (flow_case_type_string == "gaussian_bump")              {flow_case_type = gaussian_bump;}
+        else if (flow_case_type_string == "circular_couette")           {flow_case_type = circular_couette;}
         else if (flow_case_type_string == "sshock")                             {flow_case_type = sshock;}
 
         poly_degree = prm.get_integer("poly_degree");
@@ -248,6 +267,14 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
                 channel_length = prm.get_double("channel_length");
                 channel_height = prm.get_double("channel_height");
                 bump_height = prm.get_double("bump_height");
+            }
+            prm.leave_subsection();
+
+            prm.enter_subsection("circular_shell");
+            {
+                grid_inner_radius = prm.get_double("grid_inner_radius");
+                grid_outer_radius = prm.get_double("grid_outer_radius");
+                number_of_cells_in_radial_direction = prm.get_integer("number_of_cells_in_radial_direction");
             }
             prm.leave_subsection();
         }       

@@ -25,6 +25,7 @@ public:
         advection,
         periodic_1D_unsteady,
         gaussian_bump,
+        circular_couette,
         sshock
         };
     FlowCaseType flow_case_type; ///< Selected FlowCaseType from the input file
@@ -71,6 +72,9 @@ public:
     int number_of_subdivisions_in_x_direction; ///< Number of subdivisions in x direction for gaussian bump case
     int number_of_subdivisions_in_y_direction; ///< Number of subdivisions in y direction for gaussian bump case
     int number_of_subdivisions_in_z_direction; ///< Number of subdivisions in z direction for gaussian bump case
+    double grid_inner_radius; ///< Inner radius of circular shell mesh
+    double grid_outer_radius; ///< Outer radius of circular shell mesh
+    unsigned int number_of_cells_in_radial_direction; ///< Number of grid elements in the radial direction for hyper_shell mesh based cases
 
     /** For taylor green vortex integration tests, expected kinetic energy at final time. */
     double expected_kinetic_energy_at_final_time;
