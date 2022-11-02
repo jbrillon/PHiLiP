@@ -783,14 +783,14 @@ std::array<dealii::Tensor<1,dim,real2>,nstate> NavierStokes<dim,nstate,real>
         viscous_flux[0][flux_dim] = 0.0;
         // Momentum equation
         for (int stress_dim=0; stress_dim<dim; ++stress_dim){
-            viscous_flux[1+stress_dim][flux_dim] = viscous_stress_tensor[stress_dim][flux_dim];
+            viscous_flux[1+stress_dim][flux_dim] = -viscous_stress_tensor[stress_dim][flux_dim];
         }
         // Energy equation
         viscous_flux[nstate-1][flux_dim] = 0.0;
         for (int stress_dim=0; stress_dim<dim; ++stress_dim){
-           viscous_flux[nstate-1][flux_dim] += vel[stress_dim]*viscous_stress_tensor[flux_dim][stress_dim];
+           viscous_flux[nstate-1][flux_dim] -= vel[stress_dim]*viscous_stress_tensor[flux_dim][stress_dim];
         }
-        viscous_flux[nstate-1][flux_dim] -= heat_flux[flux_dim];
+        viscous_flux[nstate-1][flux_dim] += heat_flux[flux_dim];
     }
     return viscous_flux;
 }
