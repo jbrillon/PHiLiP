@@ -95,9 +95,6 @@ public:
 template <int dim, int nstate, typename real>
 class InitialConditionFunction_TaylorGreenVortex : public InitialConditionFunction_IdealGas<dim,nstate,real>
 {
-protected:
-    using dealii::Function<dim,real>::value; ///< dealii::Function we are templating on
-
 public:
     /// Constructor for TaylorGreenVortex_InitialCondition with uniform density
     /** Calls the Function(const unsigned int n_components) constructor in deal.II
@@ -312,9 +309,6 @@ public:
 template <int dim, int nstate, typename real>
 class InitialConditionFunction_CircularCouette : public InitialConditionFunction_IdealGas<dim,nstate,real>
 {
-protected:
-    using dealii::Function<dim,real>::value; ///< dealii::Function we are templating on
-
 public:
     /// Constructor for Circular-Couette Flow
     /** Calls the Function(const unsigned int n_components) constructor in deal.II
