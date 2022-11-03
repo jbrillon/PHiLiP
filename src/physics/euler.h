@@ -264,10 +264,6 @@ public:
     /// Given conservative variables, returns Mach number
     real compute_mach_number ( const std::array<real,nstate> &conservative_soln ) const;
 
-    /// Given primitive variables, returns DIMENSIONALIZED temperature using the equation of state
-    template<typename real2>
-    real2 compute_dimensional_temperature ( const std::array<real2,nstate> &primitive_soln ) const;
-
     /// Given primitive variables, returns NON-DIMENSIONALIZED temperature using free-stream non-dimensionalization
     /** See the book I do like CFD, sec 4.14.2 */
     template<typename real2>

@@ -320,21 +320,11 @@ inline real Euler<dim,nstate,real>
 template <int dim, int nstate, typename real>
 template<typename real2>
 inline real2 Euler<dim,nstate,real>
-::compute_dimensional_temperature ( const std::array<real2,nstate> &primitive_soln ) const
+::compute_temperature ( const std::array<real2,nstate> &primitive_soln ) const
 {
     const real2 density = primitive_soln[0];
     const real2 pressure = primitive_soln[nstate-1];
-    const real2 temperature = gam*pressure/density;
-    return temperature;
-}
-
-template <int dim, int nstate, typename real>
-template<typename real2>
-inline real2 Euler<dim,nstate,real>
-::compute_temperature ( const std::array<real2,nstate> &primitive_soln ) const
-{
-    const real2 dimensional_temperature = compute_dimensional_temperature<real2>(primitive_soln);
-    const real2 temperature = dimensional_temperature * mach_inf_sqr;
+    const real2 temperature = gam*mach_inf_sqr*(pressure/density);
     return temperature;
 }
 
@@ -342,7 +332,7 @@ template <int dim, int nstate, typename real>
 inline real Euler<dim,nstate,real>
 ::compute_density_from_pressure_temperature ( const real pressure, const real temperature ) const
 {
-    const real density = gam*pressure/temperature * mach_inf_sqr;
+    const real density = gam*mach_inf_sqr*(pressure/temperature);
     return density;
 }
 
@@ -350,7 +340,7 @@ template <int dim, int nstate, typename real>
 inline real Euler<dim,nstate,real>
 ::compute_temperature_from_density_pressure ( const real density, const real pressure ) const
 {
-    const real temperature = gam*pressure/density * mach_inf_sqr;
+    const real temperature = gam*mach_inf_sqr*(pressure/density);
     return temperature;
 }
 
@@ -1316,17 +1306,6 @@ template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, double     >::compute_pres
 template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, RadType    >::compute_pressure< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &conservative_soln) const;
 template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, FadFadType >::compute_pressure< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &conservative_soln) const;
 template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, RadFadType >::compute_pressure< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &conservative_soln) const;
-// -- compute_dimensional_temperature()
-template double     Euler < PHILIP_DIM, PHILIP_DIM+2, double     >::compute_dimensional_temperature< double     >(const std::array<double,    PHILIP_DIM+2> &primitive_soln) const;
-template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, FadType    >::compute_dimensional_temperature< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &primitive_soln) const;
-template RadType    Euler < PHILIP_DIM, PHILIP_DIM+2, RadType    >::compute_dimensional_temperature< RadType    >(const std::array<RadType,   PHILIP_DIM+2> &primitive_soln) const;
-template FadFadType Euler < PHILIP_DIM, PHILIP_DIM+2, FadFadType >::compute_dimensional_temperature< FadFadType >(const std::array<FadFadType,PHILIP_DIM+2> &primitive_soln) const;
-template RadFadType Euler < PHILIP_DIM, PHILIP_DIM+2, RadFadType >::compute_dimensional_temperature< RadFadType >(const std::array<RadFadType,PHILIP_DIM+2> &primitive_soln) const;
-// -- -- instantiate all the real types with real2 = FadType for automatic differentiation in NavierStokes::dissipative_flux_directional_jacobian()
-template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, double     >::compute_dimensional_temperature< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &primitive_soln) const;
-template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, RadType    >::compute_dimensional_temperature< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &primitive_soln) const;
-template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, FadFadType >::compute_dimensional_temperature< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &primitive_soln) const;
-template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, RadFadType >::compute_dimensional_temperature< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &primitive_soln) const;
 // -- compute_temperature()
 template double     Euler < PHILIP_DIM, PHILIP_DIM+2, double     >::compute_temperature< double     >(const std::array<double,    PHILIP_DIM+2> &primitive_soln) const;
 template FadType    Euler < PHILIP_DIM, PHILIP_DIM+2, FadType    >::compute_temperature< FadType    >(const std::array<FadType,   PHILIP_DIM+2> &primitive_soln) const;
