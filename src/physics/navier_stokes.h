@@ -49,6 +49,18 @@ public:
     /// Thermal boundary condition type (adiabatic or isothermal)
     const thermal_boundary_condition_enum thermal_boundary_condition_type;
 
+protected:    
+    ///@{
+    /** Constants for Sutherland's law for viscosity
+     *  Reference: Sutherland, W. (1893), "The viscosity of gases and molecular force", Philosophical Magazine, S. 5, 36, pp. 507-531 (1893)
+     *  Values: https://www.cfd-online.com/Wiki/Sutherland%27s_law
+     */
+    const double sutherlands_temperature/* = 110.4*/; ///< Sutherland's temperature. Units: [K]
+    const double free_stream_temperature/* = 273.15*/; ///< Free stream temperature. Units: [K]
+    const double temperature_ratio/* = sutherlands_temperature/free_stream_temperature*/;
+    //@}
+
+public:
     /// Destructor
     ~NavierStokes() {};
 
@@ -266,16 +278,7 @@ public:
         const dealii::Tensor<2,dim,real2> &viscous_stress_tensor,
         const dealii::Tensor<1,dim,real2> &heat_flux) const;
 
-protected:    
-    ///@{
-    /** Constants for Sutherland's law for viscosity
-     *  Reference: Sutherland, W. (1893), "The viscosity of gases and molecular force", Philosophical Magazine, S. 5, 36, pp. 507-531 (1893)
-     *  Values: https://www.cfd-online.com/Wiki/Sutherland%27s_law
-     */
-    const double free_stream_temperature = 273.15; ///< Free stream temperature. Units: [K]
-    const double sutherlands_temperature = 110.4; ///< Sutherland's temperature. Units: [K]
-    const double temperature_ratio = sutherlands_temperature/free_stream_temperature;
-    //@}
+protected:
 
     /** Nondimensionalized viscous flux (i.e. dissipative flux)
      *  Reference: Masatsuka 2018 "I do like CFD", p.142, eq.(4.12.1-4.12.4)

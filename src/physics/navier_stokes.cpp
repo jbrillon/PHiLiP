@@ -37,6 +37,9 @@ NavierStokes<dim, nstate, real>::NavierStokes(
     , reynolds_number_inf(reynolds_number_inf)
     , isothermal_wall_temperature(isothermal_wall_temperature) // Nondimensional - Free stream values
     , thermal_boundary_condition_type(thermal_boundary_condition_type)
+    , sutherlands_temperature(110.4) // Sutherland's temperature. Units: [K]
+    , free_stream_temperature(273.15) // TO DO: Make this an input -- must be consistent with Prandtl number
+    , temperature_ratio(sutherlands_temperature/free_stream_temperature)
 {
     static_assert(nstate==dim+2, "Physics::NavierStokes() should be created with nstate=dim+2");
     // Nothing to do here so far
