@@ -446,7 +446,7 @@ std::array<dealii::Tensor<1,dim,real>,nstate> Euler<dim, nstate, real>
     const real mean_density = compute_mean_density(conservative_soln1, conservative_soln2);
     const real mean_pressure = compute_mean_pressure(conservative_soln1, conservative_soln2);
     const dealii::Tensor<1,dim,real> mean_velocities = compute_mean_velocities(conservative_soln1,conservative_soln2);
-    const real mean_specific_energy = compute_mean_specific_energy(conservative_soln1, conservative_soln2);
+    const real mean_specific_total_energy = compute_mean_specific_total_energy(conservative_soln1, conservative_soln2);
 
     for (int flux_dim = 0; flux_dim < dim; ++flux_dim)
     {
@@ -458,7 +458,7 @@ std::array<dealii::Tensor<1,dim,real>,nstate> Euler<dim, nstate, real>
         }
         conv_num_split_flux[1+flux_dim][flux_dim] += mean_pressure; // Add diagonal of pressure
         // Energy equation
-        conv_num_split_flux[nstate-1][flux_dim] = mean_density*mean_velocities[flux_dim]*mean_specific_energy + mean_pressure * mean_velocities[flux_dim];
+        conv_num_split_flux[nstate-1][flux_dim] = mean_density*mean_velocities[flux_dim]*mean_specific_total_energy + mean_pressure * mean_velocities[flux_dim];
     }
 
     return conv_num_split_flux;
@@ -603,7 +603,7 @@ compute_mean_velocities(const std::array<real,nstate> &conservative_soln1,
 
 template <int dim, int nstate, typename real>
 inline real Euler<dim,nstate,real>::
-compute_mean_specific_energy(const std::array<real,nstate> &conservative_soln1,
+compute_mean_specific_total_energy(const std::array<real,nstate> &conservative_soln1,
                              const std::array<real,nstate> &conservative_soln2) const
 {
     return ((conservative_soln1[nstate-1]/conservative_soln1[0]) + (conservative_soln2[nstate-1]/conservative_soln2[0]))/2.;

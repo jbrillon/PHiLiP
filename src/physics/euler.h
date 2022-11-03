@@ -316,10 +316,10 @@ public:
         const std::array<real,nstate> &conservative_soln1,
         const std::array<real,nstate> &convervative_soln2) const;
 
-    /// Mean specific energy given two sets of conservative solutions.
+    /// Mean specific total energy given two sets of conservative solutions.
     /** Used in the implementation of the split form.
      */
-    real compute_mean_specific_energy(
+    real compute_mean_specific_total_energy(
         const std::array<real,nstate> &conservative_soln1,
         const std::array<real,nstate> &convervative_soln2) const;
 
