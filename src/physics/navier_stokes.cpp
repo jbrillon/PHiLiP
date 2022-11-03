@@ -79,7 +79,6 @@ std::array<dealii::Tensor<1,dim,real2>,nstate> NavierStokes<dim,nstate,real>
     //     primitive_soln_gradient[nstate-1][d1] *= this->gamm1;
     // }
     // -- method 2:
-    const real2 vel2 = this->template compute_velocity_squared<real2>(vel); // from Euler
     for (int d1=0; d1<dim; d1++) {
         primitive_soln_gradient[nstate-1][d1] = conservative_soln_gradient[nstate-1][d1];
         for (int d2=0; d2<dim; d2++) {
