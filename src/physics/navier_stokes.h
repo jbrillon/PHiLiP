@@ -58,7 +58,7 @@ protected:
      */
     const double sutherlands_temperature; ///< Sutherland's temperature. Units: [K]
     const double freestream_temperature; ///< Freestream temperature. Units: [K]
-    const double temperature_ratio;
+    const double temperature_ratio; ///< Ratio of Sutherland's temperature to freestream temperature
     //@}
 
 public:
