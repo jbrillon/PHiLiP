@@ -56,9 +56,9 @@ protected:
      *  Reference: Sutherland, W. (1893), "The viscosity of gases and molecular force", Philosophical Magazine, S. 5, 36, pp. 507-531 (1893)
      *  Values: https://www.cfd-online.com/Wiki/Sutherland%27s_law
      */
-    const double sutherlands_temperature/* = 110.4*/; ///< Sutherland's temperature. Units: [K]
-    const double freestream_temperature/* = 273.15*/; ///< Freestream temperature. Units: [K]
-    const double temperature_ratio/* = sutherlands_temperature/free_stream_temperature*/;
+    const double sutherlands_temperature; ///< Sutherland's temperature. Units: [K]
+    const double freestream_temperature; ///< Freestream temperature. Units: [K]
+    const double temperature_ratio;
     //@}
 
 public:
