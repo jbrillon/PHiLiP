@@ -33,6 +33,7 @@ public:
         const double                                              side_slip_angle,
         const double                                              prandtl_number,
         const double                                              reynolds_number_inf,
+        const double                                              temperature_inf = 273.15,
         const double                                              isothermal_wall_temperature = 1.0,
         const thermal_boundary_condition_enum                     thermal_boundary_condition_type = thermal_boundary_condition_enum::adiabatic,
         std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function = nullptr,
@@ -56,7 +57,7 @@ protected:
      *  Values: https://www.cfd-online.com/Wiki/Sutherland%27s_law
      */
     const double sutherlands_temperature/* = 110.4*/; ///< Sutherland's temperature. Units: [K]
-    const double free_stream_temperature/* = 273.15*/; ///< Free stream temperature. Units: [K]
+    const double freestream_temperature/* = 273.15*/; ///< Freestream temperature. Units: [K]
     const double temperature_ratio/* = sutherlands_temperature/free_stream_temperature*/;
     //@}
 

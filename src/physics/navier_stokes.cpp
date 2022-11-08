@@ -20,6 +20,7 @@ NavierStokes<dim, nstate, real>::NavierStokes(
     const double                                              side_slip_angle,
     const double                                              prandtl_number,
     const double                                              reynolds_number_inf,
+    const double                                              temperature_inf,
     const double                                              isothermal_wall_temperature,
     const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
     std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function,
@@ -38,8 +39,8 @@ NavierStokes<dim, nstate, real>::NavierStokes(
     , isothermal_wall_temperature(isothermal_wall_temperature) // Nondimensional - Free stream values
     , thermal_boundary_condition_type(thermal_boundary_condition_type)
     , sutherlands_temperature(110.4) // Sutherland's temperature. Units: [K]
-    , free_stream_temperature(273.15) // TO DO: Make this an input -- must be consistent with Prandtl number
-    , temperature_ratio(sutherlands_temperature/free_stream_temperature)
+    , freestream_temperature(temperature_inf) // Freestream temperature. Units: [K]
+    , temperature_ratio(sutherlands_temperature/freestream_temperature)
 {
     static_assert(nstate==dim+2, "Physics::NavierStokes() should be created with nstate=dim+2");
     // Nothing to do here so far
@@ -72,7 +73,7 @@ std::array<dealii::Tensor<1,dim,real2>,nstate> NavierStokes<dim,nstate,real>
         }        
     }
     // pressure gradient
-    // -- method 1:
+    // -- formulation 1:
     // const real2 vel2 = this->template compute_velocity_squared<real2>(vel); // from Euler
     // for (int d1=0; d1<dim; d1++) {
     //     primitive_soln_gradient[nstate-1][d1] = conservative_soln_gradient[nstate-1][d1] - 0.5*vel2*conservative_soln_gradient[0][d1];
@@ -81,7 +82,7 @@ std::array<dealii::Tensor<1,dim,real2>,nstate> NavierStokes<dim,nstate,real>
     //     }
     //     primitive_soln_gradient[nstate-1][d1] *= this->gamm1;
     // }
-    // -- method 2:
+    // -- formulation 2 (equivalent to formulation 1):
     for (int d1=0; d1<dim; d1++) {
         primitive_soln_gradient[nstate-1][d1] = conservative_soln_gradient[nstate-1][d1];
         for (int d2=0; d2<dim; d2++) {
