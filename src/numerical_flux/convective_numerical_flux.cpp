@@ -198,6 +198,8 @@ std::array<real, nstate> LaxFriedrichsRiemannSolverDissipation<dim,nstate,real>
 {
     const real conv_max_eig_int = pde_physics->max_convective_eigenvalue(soln_int);
     const real conv_max_eig_ext = pde_physics->max_convective_eigenvalue(soln_ext);
+    // const std::array<real,nstate> entropy_var_int = pde_physics->compute_entropy_variables(soln_int);
+    // const std::array<real,nstate> entropy_var_ext = pde_physics->compute_entropy_variables(soln_ext);
     // Replaced the std::max with an if-statement for the AD to work properly.
     //const real conv_max_eig = std::max(conv_max_eig_int, conv_max_eig_ext);
     real conv_max_eig;
