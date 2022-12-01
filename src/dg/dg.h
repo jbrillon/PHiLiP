@@ -218,6 +218,7 @@ public:
         OPERATOR::basis_functions<dim,2*dim> &soln_basis_ext,
         OPERATOR::basis_functions<dim,2*dim> &flux_basis_int,
         OPERATOR::basis_functions<dim,2*dim> &flux_basis_ext,
+        OPERATOR::local_basis_stiffness<dim,2*dim> &flux_basis_stiffness,
         OPERATOR::mapping_shape_functions<dim,2*dim> &mapping_basis);
 
     ///Builds needed operators to compute mass matrices/inverses efficiently.
@@ -566,6 +567,7 @@ public:
         OPERATOR::basis_functions<dim,2*dim> &soln_basis_ext,
         OPERATOR::basis_functions<dim,2*dim> &flux_basis_int,
         OPERATOR::basis_functions<dim,2*dim> &flux_basis_ext,
+        OPERATOR::local_basis_stiffness<dim,2*dim> &flux_basis_stiffness,
         OPERATOR::mapping_shape_functions<dim,2*dim> &mapping_basis,
         const bool compute_Auxiliary_RHS,//flag on whether computing the Auxiliary variable's equations' residuals
         dealii::LinearAlgebra::distributed::Vector<double> &rhs,
@@ -659,6 +661,7 @@ protected:
         const unsigned int                                     grid_degree,
         OPERATOR::basis_functions<dim,2*dim>                   &soln_basis,
         OPERATOR::basis_functions<dim,2*dim>                   &flux_basis,
+        OPERATOR::local_basis_stiffness<dim,2*dim>             &flux_basis_stiffness,
         OPERATOR::metric_operators<real,dim,2*dim>             &metric_oper,
         OPERATOR::mapping_shape_functions<dim,2*dim>           &mapping_basis,
         std::array<std::vector<real>,dim>                      &mapping_support_points,
@@ -683,6 +686,7 @@ protected:
         const unsigned int                                     grid_degree,
         OPERATOR::basis_functions<dim,2*dim>                   &soln_basis,
         OPERATOR::basis_functions<dim,2*dim>                   &flux_basis,
+        OPERATOR::local_basis_stiffness<dim,2*dim>             &flux_basis_stiffness,
         OPERATOR::metric_operators<real,dim,2*dim>             &metric_oper,
         OPERATOR::mapping_shape_functions<dim,2*dim>           &mapping_basis,
         std::array<std::vector<real>,dim>                      &mapping_support_points,
@@ -714,6 +718,7 @@ protected:
         OPERATOR::basis_functions<dim,2*dim>                   &soln_basis_ext,
         OPERATOR::basis_functions<dim,2*dim>                   &flux_basis_int,
         OPERATOR::basis_functions<dim,2*dim>                   &flux_basis_ext,
+        OPERATOR::local_basis_stiffness<dim,2*dim>             &flux_basis_stiffness,
         OPERATOR::metric_operators<real,dim,2*dim>             &metric_oper_int,
         OPERATOR::metric_operators<real,dim,2*dim>             &metric_oper_ext,
         OPERATOR::mapping_shape_functions<dim,2*dim>           &mapping_basis,
@@ -750,6 +755,7 @@ protected:
         OPERATOR::basis_functions<dim,2*dim>                   &soln_basis_ext,
         OPERATOR::basis_functions<dim,2*dim>                   &flux_basis_int,
         OPERATOR::basis_functions<dim,2*dim>                   &flux_basis_ext,
+        OPERATOR::local_basis_stiffness<dim,2*dim>             &flux_basis_stiffness,
         OPERATOR::metric_operators<real,dim,2*dim>             &metric_oper_int,
         OPERATOR::metric_operators<real,dim,2*dim>             &metric_oper_ext,
         OPERATOR::mapping_shape_functions<dim,2*dim>           &mapping_basis,
@@ -809,8 +815,9 @@ protected:
         const dealii::types::global_dof_index              current_cell_index,
         const std::vector<dealii::types::global_dof_index> &cell_dofs_indices,
         const unsigned int                                 poly_degree,
-        OPERATOR::basis_functions<dim,2*dim>        &soln_basis,
-        OPERATOR::basis_functions<dim,2*dim>        &flux_basis,
+        OPERATOR::basis_functions<dim,2*dim>               &soln_basis,
+        OPERATOR::basis_functions<dim,2*dim>               &flux_basis,
+        OPERATOR::local_basis_stiffness<dim,2*dim>         &flux_basis_stiffness,
         OPERATOR::metric_operators<real,dim,2*dim>         &metric_oper,
         dealii::Vector<real>                               &local_rhs_int_cell) = 0;
 
