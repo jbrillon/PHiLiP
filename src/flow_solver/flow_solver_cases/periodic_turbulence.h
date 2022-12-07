@@ -78,6 +78,12 @@ public:
             const unsigned int output_file_index,
             const double current_time) const;
 
+    /// Output the solution initialization files
+    void output_solution_for_initialization(
+            std::shared_ptr<DGBase<dim,double>> dg,
+            const unsigned int output_file_index,
+            const double current_time) const;
+
     /// Calculate numerical entropy by matrix-vector product
     double get_numerical_entropy(const std::shared_ptr <DGBase<dim, double>> dg) const;
 
@@ -97,11 +103,14 @@ protected:
     /// Flag for outputting vorticity magnitude field in addition to velocity field at fixed times
     const bool output_vorticity_magnitude_field_in_addition_to_velocity;
 
-    /// Directory for writting flow field files
+    /// Name of directory for writting flow field files
     const std::string output_flow_field_files_directory_name;
 
     /// Flag for outputting the solution files (.vtu) at the velocity field output times
     const bool output_solution_files_at_velocity_field_output_times;
+
+    /// Name of directory for writting solution initialization files
+    const std::string output_solution_initialization_files_directory_name;
 
     /// Pointer to Navier-Stokes physics object for computing things on the fly
     std::shared_ptr< Physics::NavierStokes<dim,dim+2,double> > navier_stokes_physics;
@@ -158,6 +167,9 @@ protected:
 
     /// Data table storing the exact output times for the velocity field files
     std::shared_ptr<dealii::TableHandler> exact_output_times_of_velocity_field_files_table;
+
+    /// Data table storing the exact output times for the solution for initialization files
+    std::shared_ptr<dealii::TableHandler> exact_output_times_of_solution_for_initialization_files_table;
 };
 
 } // FlowSolver namespace

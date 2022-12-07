@@ -239,6 +239,10 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                               "Output solution files (.vtu) at velocity field output times. False by default.");
         }
         prm.leave_subsection();
+
+        prm.declare_entry("output_solution_initialization_files_directory_name", ".",
+                          dealii::Patterns::FileName(dealii::Patterns::FileName::FileType::input),
+                          "Name of directory for writing solution initialization files. Current directory by default.");
     }
     prm.leave_subsection();
 }
@@ -335,6 +339,8 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
           output_solution_files_at_velocity_field_output_times = prm.get_bool("output_solution_files_at_velocity_field_output_times");
         }
         prm.leave_subsection();
+        
+        output_solution_initialization_files_directory_name = prm.get("output_solution_initialization_files_directory_name");
     }
     prm.leave_subsection();
 }

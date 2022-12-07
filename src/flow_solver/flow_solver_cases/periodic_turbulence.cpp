@@ -31,6 +31,7 @@ PeriodicTurbulence<dim, nstate>::PeriodicTurbulence(const PHiLiP::Parameters::Al
         , output_vorticity_magnitude_field_in_addition_to_velocity(this->all_param.flow_solver_param.output_vorticity_magnitude_field_in_addition_to_velocity)
         , output_flow_field_files_directory_name(this->all_param.flow_solver_param.output_flow_field_files_directory_name)
         , output_solution_files_at_velocity_field_output_times(this->all_param.flow_solver_param.output_solution_files_at_velocity_field_output_times)
+        , output_solution_initialization_files_directory_name(this->all_param.flow_solver_param.output_solution_initialization_files_directory_name)
 {
     // Get the flow case type
     using FlowCaseEnum = Parameters::FlowSolverParam::FlowCaseType;
@@ -273,6 +274,119 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
                 FILE << std::setprecision(17) << vorticity_magnitude << std::string(" ");
             }
             FILE << std::string("\n"); // next line
+        }
+    }
+    FILE.close();
+    this->pcout << "done." << std::endl;
+}
+
+template<int dim, int nstate>
+void PeriodicTurbulence<dim, nstate>::output_solution_for_initialization(
+    std::shared_ptr<DGBase<dim,double>> dg,
+    const unsigned int output_file_index,
+    const double current_time) const
+{
+    this->pcout << "     ... Writting solution for initialization ... " << std::flush;
+
+    // NOTE: Same loop from read_values_from_file_and_project() in set_initial_condition.cpp
+    
+    // Get filename prefix based on output file index and the flow field quantity filename prefix
+    const std::string filename_prefix = std::string("solution-") + std::to_string(output_file_index);
+
+    // (1) Get filename based on MPI rank
+    //-------------------------------------------------------------
+    // -- Get padded mpi rank string
+    const std::string mpi_rank_string = get_padded_mpi_rank_string(this->mpi_rank);
+    // -- Assemble filename string
+    const std::string filename_without_extension = filename_prefix + std::string("-") + mpi_rank_string;
+    const std::string filename = output_solution_initialization_files_directory_name + std::string("/") + filename_without_extension + std::string(".dat");
+    //-------------------------------------------------------------
+
+    // (1.5) Write the exact output time for the file to the table 
+    //-------------------------------------------------------------
+    if(this->mpi_rank==0) {
+        // TO DO: Write the Taylor microscale to this table at the end of this function so we know what the decay range is, maybe rename the table name too then
+        const std::string filename_for_time_table = output_solution_initialization_files_directory_name + std::string("/") + std::string("exact_output_times_of_files.txt");
+        // Add values to data table
+        this->add_value_to_data_table(output_file_index,"output_file_index",this->exact_output_times_of_solution_for_initialization_files_table);
+        this->add_value_to_data_table(current_time,"time",this->exact_output_times_of_solution_for_initialization_files_table);
+        // Write to file
+        std::ofstream data_table_file(filename_for_time_table);
+        this->exact_output_times_of_solution_for_initialization_files_table->write_text(data_table_file);
+    }
+    //-------------------------------------------------------------
+
+    // (2) Read file
+    //-------------------------------------------------------------
+    std::ofstream FILE (filename);
+    
+    // check that the file is open and write DOFs
+    if (!FILE.is_open()) {
+        this->pcout << "ERROR: Cannot open file " << filename << std::endl;
+        std::abort();
+    } else if(this->mpi_rank==0) {
+        const unsigned int number_of_degrees_of_freedom_per_state = dg->dof_handler.n_dofs()/nstate;
+        FILE << number_of_degrees_of_freedom_per_state << std::string("\n");
+    }
+
+    // write data
+    std::array<double,nstate> soln_at_q;
+    std::array<dealii::Tensor<1,dim,double>,nstate> soln_grad_at_q;
+
+    const auto mapping = (*(dg->high_order_grid->mapping_fe_field));
+    dealii::hp::MappingCollection<dim> mapping_collection(mapping);
+    dealii::hp::FEValues<dim,dim> fe_values_collection(mapping_collection, dg->fe_collection, dg->volume_quadrature_collection, 
+                                dealii::update_values | dealii::update_gradients | dealii::update_JxW_values | dealii::update_quadrature_points);
+
+    const unsigned int max_dofs_per_cell = dg->dof_handler.get_fe_collection().max_dofs_per_cell();
+    std::vector<dealii::types::global_dof_index> current_dofs_indices(max_dofs_per_cell);
+    for (auto current_cell = dg->dof_handler.begin_active(); current_cell!=dg->dof_handler.end(); ++current_cell) {
+        if (!current_cell->is_locally_owned()) continue;
+    
+        const int i_fele = current_cell->active_fe_index();
+        const int i_quad = i_fele;
+        const int i_mapp = 0;
+        fe_values_collection.reinit (current_cell, i_quad, i_mapp, i_fele);
+        const dealii::FEValues<dim,dim> &fe_values = fe_values_collection.get_present_fe_values();
+        const unsigned int poly_degree = i_fele;
+        const unsigned int n_quad_pts = dg->volume_quadrature_collection[poly_degree].size();
+        const unsigned int n_dofs_cell = dg->fe_collection[poly_degree].dofs_per_cell;
+        
+        current_dofs_indices.resize(n_dofs_cell);
+        current_cell->get_dof_indices (current_dofs_indices);
+
+        // for outputting equidistant nodes
+        const dealii::FESystem<dim,dim> &fe_sys = dg->fe_collection[i_fele];
+        // dealii::Quadrature<dim> vol_quad_equidistant = dealii::QIterated<dim>(dealii::QTrapez<1>(),poly_degree);
+        // const std::vector<dealii::Point<dim>> &unit_equidistant_quad_pts = vol_quad_equidistant.get_points(); // all cells have same poly_degree
+        for (int istate=0; istate<nstate; ++istate) {
+            for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
+                // write coordinates
+                dealii::Point<dim> qpoint;
+                // GL nodes
+                qpoint = (fe_values.quadrature_point(iquad));
+                for (int d=0; d<dim; ++d) {
+                    FILE << std::setprecision(17) << qpoint[d] << std::string(" ");
+                }
+                // get solution at qpoint
+                std::fill(soln_at_q.begin(), soln_at_q.end(), 0.0);
+                for (int s=0; s<nstate; ++s) {
+                    for (int d=0; d<dim; ++d) {
+                        soln_grad_at_q[s][d] = 0.0;
+                    }
+                }
+                
+                for (unsigned int idof=0; idof<n_dofs_cell; ++idof) {
+                    const unsigned int istate_ = fe_values.get_fe().system_to_component_index(idof).first;
+                    // at GL nodes
+                    soln_at_q[istate_] += dg->solution[current_dofs_indices[idof]] * fe_values.shape_value_component(idof, iquad, istate_);
+                    soln_grad_at_q[istate_] += dg->solution[current_dofs_indices[idof]] * fe_values.shape_grad_component(idof, iquad, istate_);
+                }
+                // write istate and corresponding solution
+                FILE << std::setprecision(17) << istate << std::string(" ");
+                FILE << std::setprecision(17) << soln_at_q[istate] << std::string(" ");
+                FILE << std::string("\n"); // next line
+            }       
         }
     }
     FILE.close();

@@ -118,6 +118,8 @@ public:
     bool output_vorticity_magnitude_field_in_addition_to_velocity; ///< Flag for outputting vorticity magnitude field in addition to velocity field
     std::string output_flow_field_files_directory_name; ///< Name of directory for writing flow field files
     bool output_solution_files_at_velocity_field_output_times; ///< Flag for outputting solution files at the velocity field output times
+
+    std::string output_solution_initialization_files_directory_name; ///< Name of directory for writting solution initialization files
 };
 
 } // Parameters namespace
