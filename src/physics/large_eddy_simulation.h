@@ -29,6 +29,8 @@ public:
         const double                                              temperature_inf,
         const double                                              turbulent_prandtl_number,
         const double                                              ratio_of_filter_width_to_cell_size,
+        const bool                                                use_constant_filter_width,
+        const double                                              constant_filter_width,
         const double                                              isothermal_wall_temperature = 1.0,
         const thermal_boundary_condition_enum                     thermal_boundary_condition_type = thermal_boundary_condition_enum::adiabatic,
         std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function = nullptr,
@@ -42,6 +44,12 @@ public:
 
     /// Ratio of filter width to cell size
     const double ratio_of_filter_width_to_cell_size;
+
+    /// Flag to use constant filter width instead of cell based filter width
+    const bool use_constant_filter_width;
+    
+    /// Nondimensionalized filter width
+    const double constant_filter_width;
 
     /// Pointer to Navier-Stokes physics object
     std::unique_ptr< NavierStokes<dim,nstate,real> > navier_stokes_physics;
@@ -160,6 +168,8 @@ public:
         const double                                              temperature_inf,
         const double                                              turbulent_prandtl_number,
         const double                                              ratio_of_filter_width_to_cell_size,
+        const bool                                                use_constant_filter_width,
+        const double                                              constant_filter_width,
         const double                                              model_constant,
         const double                                              isothermal_wall_temperature = 1.0,
         const thermal_boundary_condition_enum                     thermal_boundary_condition_type = thermal_boundary_condition_enum::adiabatic,
@@ -262,6 +272,8 @@ public:
         const double                                              temperature_inf,
         const double                                              turbulent_prandtl_number,
         const double                                              ratio_of_filter_width_to_cell_size,
+        const bool                                                use_constant_filter_width,
+        const double                                              constant_filter_width,
         const double                                              model_constant,
         const double                                              isothermal_wall_temperature = 1.0,
         const thermal_boundary_condition_enum                     thermal_boundary_condition_type = thermal_boundary_condition_enum::adiabatic,
@@ -320,6 +332,8 @@ public:
         const double                                              temperature_inf,
         const double                                              turbulent_prandtl_number,
         const double                                              ratio_of_filter_width_to_cell_size,
+        const bool                                                use_constant_filter_width,
+        const double                                              constant_filter_width,
         const double                                              model_constant,
         const double                                              isothermal_wall_temperature = 1.0,
         const thermal_boundary_condition_enum                     thermal_boundary_condition_type = thermal_boundary_condition_enum::adiabatic,

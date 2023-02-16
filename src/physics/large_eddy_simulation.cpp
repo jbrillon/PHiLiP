@@ -27,6 +27,8 @@ LargeEddySimulationBase<dim, nstate, real>::LargeEddySimulationBase(
     const double                                              temperature_inf,
     const double                                              turbulent_prandtl_number,
     const double                                              ratio_of_filter_width_to_cell_size,
+    const bool                                                use_constant_filter_width,
+    const double                                              constant_filter_width,
     const double                                              isothermal_wall_temperature,
     const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
     std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function,
@@ -34,6 +36,8 @@ LargeEddySimulationBase<dim, nstate, real>::LargeEddySimulationBase(
     : ModelBase<dim,nstate,real>(manufactured_solution_function) 
     , turbulent_prandtl_number(turbulent_prandtl_number)
     , ratio_of_filter_width_to_cell_size(ratio_of_filter_width_to_cell_size)
+    , use_constant_filter_width(use_constant_filter_width)
+    , constant_filter_width(constant_filter_width) // Nondimensional - Free stream values
     , navier_stokes_physics(std::make_unique < NavierStokes<dim,nstate,real> > (
             ref_length,
             gamma_gas,
@@ -389,6 +393,8 @@ LargeEddySimulation_Smagorinsky<dim, nstate, real>::LargeEddySimulation_Smagorin
     const double                                              temperature_inf,
     const double                                              turbulent_prandtl_number,
     const double                                              ratio_of_filter_width_to_cell_size,
+    const bool                                                use_constant_filter_width,
+    const double                                              constant_filter_width,
     const double                                              model_constant,
     const double                                              isothermal_wall_temperature,
     const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
@@ -406,6 +412,8 @@ LargeEddySimulation_Smagorinsky<dim, nstate, real>::LargeEddySimulation_Smagorin
                                                temperature_inf,
                                                turbulent_prandtl_number,
                                                ratio_of_filter_width_to_cell_size,
+                                               use_constant_filter_width,
+                                               constant_filter_width,
                                                isothermal_wall_temperature,
                                                thermal_boundary_condition_type,
                                                manufactured_solution_function,
@@ -615,6 +623,8 @@ LargeEddySimulation_WALE<dim, nstate, real>::LargeEddySimulation_WALE(
     const double                                              temperature_inf,
     const double                                              turbulent_prandtl_number,
     const double                                              ratio_of_filter_width_to_cell_size,
+    const bool                                                use_constant_filter_width,
+    const double                                              constant_filter_width,
     const double                                              model_constant,
     const double                                              isothermal_wall_temperature,
     const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
@@ -632,6 +642,8 @@ LargeEddySimulation_WALE<dim, nstate, real>::LargeEddySimulation_WALE(
                                                        temperature_inf,
                                                        turbulent_prandtl_number,
                                                        ratio_of_filter_width_to_cell_size,
+                                                       use_constant_filter_width,
+                                                       constant_filter_width,
                                                        model_constant,
                                                        isothermal_wall_temperature,
                                                        thermal_boundary_condition_type,
@@ -742,6 +754,8 @@ LargeEddySimulation_Vreman<dim, nstate, real>::LargeEddySimulation_Vreman(
     const double                                              temperature_inf,
     const double                                              turbulent_prandtl_number,
     const double                                              ratio_of_filter_width_to_cell_size,
+    const bool                                                use_constant_filter_width,
+    const double                                              constant_filter_width,
     const double                                              model_constant,
     const double                                              isothermal_wall_temperature,
     const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
@@ -759,6 +773,8 @@ LargeEddySimulation_Vreman<dim, nstate, real>::LargeEddySimulation_Vreman(
                                                        temperature_inf,
                                                        turbulent_prandtl_number,
                                                        ratio_of_filter_width_to_cell_size,
+                                                       use_constant_filter_width,
+                                                       constant_filter_width,
                                                        model_constant,
                                                        isothermal_wall_temperature,
                                                        thermal_boundary_condition_type,
