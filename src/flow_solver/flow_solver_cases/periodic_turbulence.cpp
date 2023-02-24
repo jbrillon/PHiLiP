@@ -27,7 +27,6 @@ PeriodicTurbulence<dim, nstate>::PeriodicTurbulence(const PHiLiP::Parameters::Al
         , unsteady_data_table_filename_with_extension(this->all_param.flow_solver_param.unsteady_data_table_filename+".txt")
         , number_of_times_to_output_velocity_field(this->all_param.flow_solver_param.number_of_times_to_output_velocity_field)
         , output_velocity_field_at_fixed_times(this->all_param.flow_solver_param.output_velocity_field_at_fixed_times)
-        , output_velocity_field_at_equidistant_nodes(this->all_param.flow_solver_param.output_velocity_field_at_equidistant_nodes)
         , output_vorticity_magnitude_field_in_addition_to_velocity(this->all_param.flow_solver_param.output_vorticity_magnitude_field_in_addition_to_velocity)
         , output_flow_field_files_directory_name(this->all_param.flow_solver_param.output_flow_field_files_directory_name)
         , output_solution_files_at_velocity_field_output_times(this->all_param.flow_solver_param.output_solution_files_at_velocity_field_output_times)
@@ -195,41 +194,19 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
         FILE << number_of_degrees_of_freedom_per_state << std::string("\n");
     }
 
-    // write the velocity field
-//    std::array<double,nstate> soln_at_q;
-//    std::array<dealii::Tensor<1,dim,double>,nstate> soln_grad_at_q;
-
-
-    //build a basis oneD on equidistant nodes in 1D
+    // build a basis oneD on equidistant nodes in 1D
     dealii::Quadrature<1> vol_quad_equidistant_1D = dealii::QIterated<1>(dealii::QTrapez<1>(),dg->max_degree);
     dealii::FE_DGQArbitraryNodes<1,1> equidistant_finite_element(vol_quad_equidistant_1D);
 
     const unsigned int init_grid_degree = dg->high_order_grid->fe_system.tensor_degree();
     OPERATOR::basis_functions<dim,2*dim> soln_basis(1, dg->max_degree, init_grid_degree); 
-   // soln_basis.build_1D_volume_operator(dg->oneD_fe_collection_1state[dg->max_degree], dg->oneD_quadrature_collection[dg->max_degree]);
-   // soln_basis.build_1D_gradient_operator(dg->oneD_fe_collection_1state[dg->max_degree], dg->oneD_quadrature_collection[dg->max_degree]);
     soln_basis.build_1D_volume_operator(dg->oneD_fe_collection_1state[dg->max_degree], vol_quad_equidistant_1D);
     soln_basis.build_1D_gradient_operator(dg->oneD_fe_collection_1state[dg->max_degree], vol_quad_equidistant_1D);
 
-
-    //build projection operator on equidistant nodes
-//    OPERATOR::vol_projection_operator<dim,2*dim> projection_oper(1, dg->max_degree, init_grid_degree);
-//    projection_oper.build_1D_volume_operator(equidistant_finite_element, dg->oneD_quadrature_collection[dg->max_degree]);
-
-    //mapping basis for the quadrature set
-//    OPERATOR::mapping_shape_functions<dim,2*dim> mapping_basis(1, dg->max_degree, init_grid_degree);
-//    mapping_basis.build_1D_shape_functions_at_grid_nodes(dg->high_order_grid->oneD_fe_system, dg->high_order_grid->oneD_grid_nodes);
-//    mapping_basis.build_1D_shape_functions_at_flux_nodes(dg->high_order_grid->oneD_fe_system, dg->oneD_quadrature_collection[dg->max_degree], dg->oneD_face_quadrature);
-
-    //mapping basis for the equidistant node set because we output the physical coordinates
+    // mapping basis for the equidistant node set because we output the physical coordinates
     OPERATOR::mapping_shape_functions<dim,2*dim> mapping_basis_at_equidistant(1, dg->max_degree, init_grid_degree);
     mapping_basis_at_equidistant.build_1D_shape_functions_at_grid_nodes(dg->high_order_grid->oneD_fe_system, dg->high_order_grid->oneD_grid_nodes);
     mapping_basis_at_equidistant.build_1D_shape_functions_at_flux_nodes(dg->high_order_grid->oneD_fe_system, vol_quad_equidistant_1D, dg->oneD_face_quadrature);
-
-//    const auto mapping = (*(dg->high_order_grid->mapping_fe_field));
-//    dealii::hp::MappingCollection<dim> mapping_collection(mapping);
-//    dealii::hp::FEValues<dim,dim> fe_values_collection(mapping_collection, dg->fe_collection, dg->volume_quadrature_collection, 
-//                                dealii::update_values | dealii::update_gradients | dealii::update_JxW_values | dealii::update_quadrature_points);
 
     const unsigned int max_dofs_per_cell = dg->dof_handler.get_fe_collection().max_dofs_per_cell();
     std::vector<dealii::types::global_dof_index> current_dofs_indices(max_dofs_per_cell);
@@ -238,12 +215,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
         if (!current_cell->is_locally_owned()) continue;
     
         const int i_fele = current_cell->active_fe_index();
-//        const int i_quad = i_fele;
-//        const int i_mapp = 0;
-//        fe_values_collection.reinit (current_cell, i_quad, i_mapp, i_fele);
-//        const dealii::FEValues<dim,dim> &fe_values = fe_values_collection.get_present_fe_values();
         const unsigned int poly_degree = i_fele;
-//        const unsigned int n_quad_pts = dg->volume_quadrature_collection[poly_degree].size();
         const unsigned int n_dofs_cell = dg->fe_collection[poly_degree].dofs_per_cell;
         const unsigned int n_shape_fns = n_dofs_cell / nstate;
         const unsigned int n_quad_pts = n_shape_fns;
@@ -268,16 +240,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
             const unsigned int igrid_node = index_renumbering[ishape];
             mapping_support_points[istate][igrid_node] = val;
         }
-        // Construct the metric operators.
-//        OPERATOR::metric_operators<double, dim, 2*dim> metric_oper(nstate, poly_degree, init_grid_degree, false, false);
-//        // Build the metric terms to compute the gradient and volume node positions.
-//        // This functions will compute the determinant of the metric Jacobian and metric cofactor matrix.
-//        // If flags store_vol_flux_nodes and store_surf_flux_nodes set as true it will also compute the physical quadrature positions.
-//        metric_oper.build_volume_metric_operators(
-//            n_quad_pts, n_grid_nodes,
-//            mapping_support_points,
-//            mapping_basis,
-//            dg->all_parameters->use_invariant_curl_form);
+        // Construct the metric operators
         OPERATOR::metric_operators<double, dim, 2*dim> metric_oper_equid(nstate, poly_degree, init_grid_degree, true, false);
         // Build the metric terms to compute the gradient and volume node positions.
         // This functions will compute the determinant of the metric Jacobian and metric cofactor matrix.
@@ -292,17 +255,13 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
         current_dofs_indices.resize(n_dofs_cell);
         current_cell->get_dof_indices (current_dofs_indices);
 
-        // for outputting equidistant nodes
-//        const dealii::FESystem<dim,dim> &fe_sys = dg->fe_collection[i_fele];
-//        dealii::Quadrature<dim> vol_quad_equidistant = dealii::QIterated<dim>(dealii::QTrapez<1>(),poly_degree);
-//        const std::vector<dealii::Point<dim>> &unit_equidistant_quad_pts = vol_quad_equidistant.get_points(); // all cells have same poly_degree
-
         std::array<std::vector<double>,nstate> soln_coeff;
         for(unsigned int idof=0; idof<n_dofs_cell; idof++){
             const unsigned int istate = dg->fe_collection[poly_degree].system_to_component_index(idof).first;
             const unsigned int ishape = dg->fe_collection[poly_degree].system_to_component_index(idof).second;
-            if(ishape == 0)
+            if(ishape == 0) {
                 soln_coeff[istate].resize(n_shape_fns);
+            }
             soln_coeff[istate][ishape] = dg->solution(current_dofs_indices[idof]);
         }
 
@@ -313,7 +272,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
             // Interpolate soln coeff to volume cubature nodes.
             soln_basis.matrix_vector_mult_1D(soln_coeff[istate], soln_at_q[istate],
                                              soln_basis.oneD_vol_operator);
-            //apply gradient of reference basis functions on the solution at volume cubature nodes
+            // apply gradient of reference basis functions on the solution at volume cubature nodes
             dealii::Tensor<1,dim,std::vector<double>> ref_gradient_basis_fns_times_soln;
             for(int idim=0; idim<dim; idim++){
                 ref_gradient_basis_fns_times_soln[idim].resize(n_quad_pts);
@@ -321,23 +280,21 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
             soln_basis.gradient_matrix_vector_mult_1D(soln_coeff[istate], ref_gradient_basis_fns_times_soln,
                                                       soln_basis.oneD_vol_operator,
                                                       soln_basis.oneD_grad_operator);
-            //transform the gradient into a physical gradient operator scaled by determinant of metric Jacobian
-            //then apply the inner product in each direction
+            // transform the gradient into a physical gradient operator scaled by determinant of metric Jacobian
+            // then apply the inner product in each direction
             for(int idim=0; idim<dim; idim++){
                 soln_grad_at_q[istate][idim].resize(n_quad_pts);
                 for(unsigned int iquad=0; iquad<n_quad_pts; iquad++){
                     for(int jdim=0; jdim<dim; jdim++){
                         //transform into the physical gradient
-                       // soln_grad_at_q[istate][idim][iquad] += metric_oper.metric_cofactor_vol[idim][jdim][iquad]
                         soln_grad_at_q[istate][idim][iquad] += metric_oper_equid.metric_cofactor_vol[idim][jdim][iquad]
                                                             * ref_gradient_basis_fns_times_soln[jdim][iquad]
-                                                           // / metric_oper.det_Jac_vol[iquad];
                                                             / metric_oper_equid.det_Jac_vol[iquad];
                     }
                 }
             }
         }
-        //compute quantitiues at quad nodes
+        // compute quantities at quad nodes (equisdistant)
         dealii::Tensor<1,dim,std::vector<double>> velocity_at_q;
         std::vector<double> vorticity_magnitude_at_q(n_quad_pts);
         for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
@@ -361,86 +318,24 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
                 vorticity_magnitude_at_q[iquad] = this->navier_stokes_physics->compute_vorticity_magnitude(soln_state, soln_grad_state);
             }
         }
-//        //project computed values onto the equidistant nodal set
-//        dealii::Tensor<1,dim,std::vector<double>> velocity_at_equidistant_nodes;
-//        std::vector<double> vorticity_magnitude_at_equidistant_nodes(n_shape_fns);
-//        projection_oper.matrix_vector_mult_1D(vorticity_magnitude_at_q, vorticity_magnitude_at_equidistant_nodes,
-//                                              projection_oper.oneD_vol_operator);
-//        for(int idim=0; idim<dim; idim++){
-//            velocity_at_equidistant_nodes[idim].resize(n_shape_fns);
-//            projection_oper.matrix_vector_mult_1D(velocity_at_q[idim], velocity_at_equidistant_nodes[idim],
-//                                                  projection_oper.oneD_vol_operator);
-//        }
-        //write out all values at equidistant nodes
+        // write out all values at equidistant nodes
         for(unsigned int ishape=0; ishape<n_shape_fns; ishape++){
             dealii::Point<dim,double> vol_equid_node;
-            for(int idim=0; idim<dim; idim++){
+            // write coordinates
+            for(int idim=0; idim<dim; idim++) {
                 vol_equid_node[idim] = metric_oper_equid.flux_nodes_vol[idim][ishape];
                 FILE << std::setprecision(17) << vol_equid_node[idim] << std::string(" ");
             }
-
+            // write velocity field
             for (int d=0; d<dim; ++d) {
-               // FILE << std::setprecision(17) << velocity_at_equidistant_nodes[d][ishape] << std::string(" ");
                 FILE << std::setprecision(17) << velocity_at_q[d][ishape] << std::string(" ");
             }
             // write vorticity magnitude field if desired
             if(output_vorticity_magnitude_field_in_addition_to_velocity) {
-               // FILE << std::setprecision(17) << vorticity_magnitude_at_equidistant_nodes[ishape] << std::string(" ");
                 FILE << std::setprecision(17) << vorticity_magnitude_at_q[ishape] << std::string(" ");
             }
             FILE << std::string("\n"); // next line
         }
-
-
-//        //get the solution, gradient at quadrature nodes
-//        for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
-//
-//            // write coordinates
-//            dealii::Point<dim> qpoint;
-//            if(output_velocity_field_at_equidistant_nodes) {
-//                // equidistant nodes
-//                qpoint = mapping.transform_unit_to_real_cell(current_cell,unit_equidistant_quad_pts[iquad]);
-//            } else {
-//                // GL nodes
-//                qpoint = (fe_values.quadrature_point(iquad));
-//            }
-//            for (int d=0; d<dim; ++d) {
-//                FILE << std::setprecision(17) << qpoint[d] << std::string(" ");
-//            }
-//
-//            // get solution at qpoint
-//            std::fill(soln_at_q.begin(), soln_at_q.end(), 0.0);
-//            for (int s=0; s<nstate; ++s) {
-//                for (int d=0; d<dim; ++d) {
-//                    soln_grad_at_q[s][d] = 0.0;
-//                }
-//            }
-//            
-//            for (unsigned int idof=0; idof<n_dofs_cell; ++idof) {
-//                const unsigned int istate = fe_values.get_fe().system_to_component_index(idof).first;
-//                
-//                if(output_velocity_field_at_equidistant_nodes) {
-//                    // at equidistant nodes
-//                    soln_at_q[istate] += dg->solution[current_dofs_indices[idof]] * fe_sys.shape_value_component(idof, unit_equidistant_quad_pts[iquad], istate);
-//                    soln_grad_at_q[istate] += dg->solution[current_dofs_indices[idof]] * fe_sys.shape_grad_component(idof, unit_equidistant_quad_pts[iquad], istate);
-//                } else {
-//                    // at GL nodes
-//                    soln_at_q[istate] += dg->solution[current_dofs_indices[idof]] * fe_values.shape_value_component(idof, iquad, istate);
-//                    soln_grad_at_q[istate] += dg->solution[current_dofs_indices[idof]] * fe_values.shape_grad_component(idof, iquad, istate);
-//                }
-//            }
-//            // write velocity field
-//            const dealii::Tensor<1,dim,double> velocity = this->navier_stokes_physics->compute_velocities(soln_at_q);
-//            for (int d=0; d<dim; ++d) {
-//                FILE << std::setprecision(17) << velocity[d] << std::string(" ");
-//            }
-//            // write vorticity magnitude field if desired
-//            if(output_vorticity_magnitude_field_in_addition_to_velocity) {
-//                const double vorticity_magnitude = this->navier_stokes_physics->compute_vorticity_magnitude(soln_at_q, soln_grad_at_q);
-//                FILE << std::setprecision(17) << vorticity_magnitude << std::string(" ");
-//            }
-//            FILE << std::string("\n"); // next line
-//        }
     }
     FILE.close();
     this->pcout << "done." << std::endl;
