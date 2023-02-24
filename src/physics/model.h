@@ -100,6 +100,11 @@ public:
     // Quantities needed to be updated by DG for the model -- accomplished by DGBase update_model_variables()
     dealii::LinearAlgebra::distributed::Vector<int> cellwise_poly_degree; ///< Cellwise polynomial degree
     dealii::LinearAlgebra::distributed::Vector<double> cellwise_volume; ////< Cellwise element volume
+    double integrated_density_over_domain; ///< Integrated density over domain
+    double channel_height; ///< Channel height
+    double half_channel_height; ///< Half channel height
+    double channel_bulk_reynolds_number; ///< Channel bulk Reynolds number
+    double time_step; ///< Current time step
 
 protected:
     /// Evaluate the manufactured solution boundary conditions.
@@ -134,11 +139,13 @@ protected:
     virtual void boundary_farfield (
         std::array<real,nstate> &soln_bc) const;
 
+    /// Riemann-based farfield boundary conditions based on freestream values.
     virtual void boundary_riemann (
         const dealii::Tensor<1,dim,real> &normal_int,
         const std::array<real,nstate> &soln_int,
         std::array<real,nstate> &soln_bc) const;
 
+    /// Slip wall boundary condition
     virtual void boundary_slip_wall (
         const dealii::Tensor<1,dim,real> &normal_int,
         const std::array<real,nstate> &soln_int,

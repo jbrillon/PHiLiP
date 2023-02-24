@@ -40,6 +40,7 @@ FlowSolver<dim, nstate>::FlowSolver(
 {
     flow_solver_case->set_higher_order_grid(dg);
     dg->allocate_system();
+    flow_solver_case->initialize_model_variables(dg);
 
     if(ode_param.ode_solver_type == Parameters::ODESolverParam::pod_galerkin_solver || ode_param.ode_solver_type == Parameters::ODESolverParam::pod_petrov_galerkin_solver){
         std::shared_ptr<ProperOrthogonalDecomposition::OfflinePOD<dim>> pod = std::make_shared<ProperOrthogonalDecomposition::OfflinePOD<dim>>(dg);
@@ -393,16 +394,25 @@ int FlowSolver<dim,nstate>::run() const
         // Initialize time step
         //----------------------------------------------------
         double time_step = 0.0;
-        if(flow_solver_param.restart_computation_from_file == true) {
-            pcout << "Setting time step from restart file... " << std::flush;
-            time_step = ode_param.initial_time_step;
-        } else {
-            if(flow_solver_param.adaptive_time_step == false) {
+        if(flow_solver_param.adaptive_time_step == false) {
+            if(flow_solver_param.restart_computation_from_file == true) {
+                pcout << "Setting time step from restart file... " << std::flush;
+                time_step = ode_param.initial_time_step;
+            } else {
                 pcout << "Setting constant time step... " << std::flush;
                 time_step = flow_solver_case->get_constant_time_step(dg);
-            } else {
-                pcout << "Setting initial adaptive time step... " << std::flush;
-                time_step = flow_solver_case->get_adaptive_time_step_initial(dg);
+            }
+        } else {
+            /* same behavior if restarting computation from file,
+               should give the same time step as written in file,
+               a warning is thrown if this is not the case */
+            pcout << "Setting initial adaptive time step... " << std::flush;
+            time_step = flow_solver_case->get_adaptive_time_step_initial(dg);
+            if(flow_solver_param.restart_computation_from_file == true) {
+                if(std::abs(time_step-ode_param.initial_time_step) > 1E-13) {
+                    pcout << "WARNING: Computed initial adaptive time step does not match value in parameter file within the tolerance. "
+                          << "Diff is: " << std::abs(time_step-ode_param.initial_time_step) << std::endl;
+                }
             }
         }
         flow_solver_case->set_time_step(time_step);
@@ -437,6 +447,9 @@ int FlowSolver<dim,nstate>::run() const
                 time_step = flow_solver_case->get_adaptive_time_step(dg);
                 flow_solver_case->set_time_step(time_step);
             }
+
+            // update model variables
+            flow_solver_case->update_model_variables(dg);
 
             // advance solution
             ode_solver->step_in_time(time_step,false); // pseudotime==false
