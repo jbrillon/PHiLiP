@@ -226,7 +226,8 @@ double LargeEddySimulationBase<dim,nstate,real>
      * */
     const int cell_poly_degree = this->cellwise_poly_degree[cell_index];
     const double cell_volume = this->cellwise_volume[cell_index];
-    double filter_width = pow(cell_volume, (1.0/3.0))/(cell_poly_degree+1);
+    // double filter_width = pow(cell_volume, (1.0/3.0))/(cell_poly_degree+1);
+    double filter_width = cell_volume/((cell_poly_degree+1)*(cell_poly_degree+1)*(cell_poly_degree+1));
     // Resize given the ratio of filter width to cell size
     filter_width *= ratio_of_filter_width_to_cell_size;
 
