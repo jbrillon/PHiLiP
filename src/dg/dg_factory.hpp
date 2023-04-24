@@ -29,7 +29,8 @@ public:
         const unsigned int degree,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const std::shared_ptr<Triangulation> triangulation_input);
+        const std::shared_ptr<Triangulation> triangulation_input,
+		const double c_value_input = 0.0);
 
     /// calls the above dg factory with grid_degree_input = degree + 1
     static std::shared_ptr< DGBase<dim,real,MeshType> >
@@ -37,14 +38,16 @@ public:
         const Parameters::AllParameters *const parameters_input,
         const unsigned int degree,
         const unsigned int max_degree_input,
-        const std::shared_ptr<Triangulation> triangulation_input);
+        const std::shared_ptr<Triangulation> triangulation_input,
+		const double c_value_input = 0.0);
 
     /// calls the above dg factory with max_degree_input = degree
     static std::shared_ptr< DGBase<dim,real,MeshType> >
         create_discontinuous_galerkin(
         const Parameters::AllParameters *const parameters_input,
         const unsigned int degree,
-        const std::shared_ptr<Triangulation> triangulation_input);
+        const std::shared_ptr<Triangulation> triangulation_input,
+		const double c_value_input = 0.0);
 };
 
 } // PHiLiP namespace

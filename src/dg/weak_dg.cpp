@@ -147,8 +147,9 @@ DGWeak<dim,nstate,real,MeshType>::DGWeak(
     const unsigned int degree,
     const unsigned int max_degree_input,
     const unsigned int grid_degree_input,
-    const std::shared_ptr<Triangulation> triangulation_input)
-    : DGBaseState<dim,nstate,real,MeshType>::DGBaseState(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input)
+    const std::shared_ptr<Triangulation> triangulation_input,
+	const double c_value_input)
+    : DGBaseState<dim,nstate,real,MeshType>::DGBaseState(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input)
 { }
 // Destructor
 template <int dim, int nstate, typename real,typename MeshType>

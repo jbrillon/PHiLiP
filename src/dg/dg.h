@@ -105,6 +105,8 @@ public:
      *  DGBase cannot use nstate as a compile-time known.  */
     const unsigned int max_grid_degree;
 
+	const double c_value;
+
     /// Principal constructor that will call delegated constructor.
     /** Will initialize mapping, fe_dg, all_parameters, volume_quadrature, and face_quadrature
      *  from DGBase. The it will new some FEValues that will be used to retrieve the
@@ -117,7 +119,8 @@ public:
            const unsigned int degree,
            const unsigned int max_degree_input,
            const unsigned int grid_degree_input,
-           const std::shared_ptr<Triangulation> triangulation_input);
+           const std::shared_ptr<Triangulation> triangulation_input,
+	     const double c_value_input);
 
 
     /// Reinitializes the DG object after a change of triangulation
@@ -149,7 +152,8 @@ public:
             const unsigned int max_degree_input,
             const unsigned int grid_degree_input,
             const std::shared_ptr<Triangulation> triangulation_input,
-            const MassiveCollectionTuple collection_tuple);
+            const MassiveCollectionTuple collection_tuple,
+			const double c_value_input);
 
     std::shared_ptr<Triangulation> triangulation; ///< Mesh
 
@@ -956,7 +960,8 @@ public:
         const unsigned int degree,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const std::shared_ptr<Triangulation> triangulation_input);
+        const std::shared_ptr<Triangulation> triangulation_input,
+		const double c_value_input = 0.0);
 
     /// Contains the physics of the PDE with real type
     std::shared_ptr < Physics::PhysicsBase<dim, nstate, real > > pde_physics_double;

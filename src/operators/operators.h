@@ -529,7 +529,8 @@ public:
         const int nstate_input,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const Parameters::AllParameters::Flux_Reconstruction FR_param_input);
+        const Parameters::AllParameters::Flux_Reconstruction FR_param_input,
+        const double c_value_input = 0.0);
     ///Destructor.
     ~local_Flux_Reconstruction_operator () {};
 
@@ -541,6 +542,9 @@ public:
 
     ///Flux reconstruction paramater value.
     double FR_param;
+	
+	/// c_value for flux reconstruction.
+	const double c_value;
 
     ///Evaluates Huynh's g2 parameter for flux reconstruction.
     /* This parameter recovers Huynh, Hung T. "A flux reconstruction approach to high-order schemes including discontinuous Galerkin methods." 18th AIAA computational fluid dynamics conference. 2007.
@@ -647,7 +651,8 @@ public:
         const int nstate_input,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_aux_input);
+        const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_aux_input,
+        const double c_value_input = 0.0);
 
     ///Destructor.
     ~local_Flux_Reconstruction_operator_aux () {};
@@ -660,6 +665,9 @@ public:
 
     ///Flux reconstruction paramater value.
     double FR_param_aux;
+	
+	/// c_value for flux reconstruction.
+	const double c_value;
 
     ///Gets the FR correction parameter for the auxiliary equations and stores.
     /**These values are name specified in parameters/all_parameters.h, passed through control file/or test and here converts/stores as value.
@@ -719,6 +727,7 @@ public:
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
         const Parameters::AllParameters::Flux_Reconstruction FR_param_input,
+		const double c_value_input = 0.0,
         const bool store_transpose_input = false);
 
     ///Destructor.
@@ -732,6 +741,8 @@ public:
 
     ///Flux reconstruction parameter type.
     const Parameters::AllParameters::Flux_Reconstruction FR_param_type;
+
+	const double c_value;
 
     ///Assembles the one dimensional operator.
     void build_1D_volume_operator(
@@ -753,6 +764,7 @@ public:
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
         const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_input,
+		const double c_value_input =0.0,
         const bool store_transpose_input = false);
 
     ///Destructor.
@@ -766,6 +778,8 @@ public:
 
     ///Flux reconstruction parameter type.
     const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_type;
+	
+	const double c_value;
 
     ///Assembles the one dimensional operator.
     void build_1D_volume_operator(
@@ -786,7 +800,8 @@ public:
         const int nstate_input,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const Parameters::AllParameters::Flux_Reconstruction FR_param_input);
+        const Parameters::AllParameters::Flux_Reconstruction FR_param_input,
+        const double c_value_input =0.0);
 
     ///Destructor.
     ~FR_mass_inv () {};
@@ -796,6 +811,9 @@ public:
 
     ///Flux reconstruction parameter type.
     const Parameters::AllParameters::Flux_Reconstruction FR_param_type;
+	
+	/// c_value for flux reconstruction.
+	const double c_value;
 
     ///Assembles the one dimensional operator.
     void build_1D_volume_operator(
@@ -812,7 +830,8 @@ public:
         const int nstate_input,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_input);
+        const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_input,
+        const double c_value_input = 0.0);
 
     ///Destructor.
     ~FR_mass_inv_aux () {};
@@ -822,6 +841,9 @@ public:
 
     ///Flux reconstruction parameter type.
     const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_type;
+	
+	/// c_value for flux reconstruction.
+	const double c_value;
 
     ///Assembles the one dimensional operator.
     void build_1D_volume_operator(
@@ -838,7 +860,8 @@ public:
         const int nstate_input,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const Parameters::AllParameters::Flux_Reconstruction FR_param_input);
+        const Parameters::AllParameters::Flux_Reconstruction FR_param_input,
+        const double c_value_input = 0.0);
 
     ///Destructor.
     ~FR_mass () {};
@@ -848,6 +871,9 @@ public:
 
     ///Flux reconstruction parameter type.
     const Parameters::AllParameters::Flux_Reconstruction FR_param_type;
+
+	/// c_value for flux reconstruction.
+	const double c_value;
 
     ///Assembles the one dimensional operator.
     void build_1D_volume_operator(
@@ -865,7 +891,8 @@ public:
         const int nstate_input,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_input);
+        const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_input,
+        const double c_value_input = 0.0);
 
     ///Destructor.
     ~FR_mass_aux () {};
@@ -875,6 +902,9 @@ public:
 
     ///Flux reconstruction parameter type.
     const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_type;
+	
+	/// c_value for flux reconstruction.
+	const double c_value;
 
     ///Assembles the one dimensional operator.
     void build_1D_volume_operator(
@@ -1007,7 +1037,8 @@ public:
         const int nstate_input,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const Parameters::AllParameters::Flux_Reconstruction FR_param_input);
+        const Parameters::AllParameters::Flux_Reconstruction FR_param_input,
+		const double c_value_input = 0.0);
 
     ///Destructor.
     ~lifting_operator_FR () {};
@@ -1017,6 +1048,9 @@ public:
 
     ///Flux reconstruction parameter type.
     const Parameters::AllParameters::Flux_Reconstruction FR_param_type;
+	
+	/// c_value for flux reconstruction.
+	const double c_value;
 
     ///Assembles the one dimensional norm operator that it is lifted onto.
     /** Note that the norm is the FR mass matrix in this case. This has to be called before build_1D_surface_operator.

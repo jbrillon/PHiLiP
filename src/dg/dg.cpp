@@ -70,8 +70,9 @@ DGBase<dim,real,MeshType>::DGBase(
     const unsigned int degree,
     const unsigned int max_degree_input,
     const unsigned int grid_degree_input,
-    const std::shared_ptr<Triangulation> triangulation_input)
-    : DGBase<dim,real,MeshType>(nstate_input, parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, this->create_collection_tuple(max_degree_input, nstate_input, parameters_input))
+    const std::shared_ptr<Triangulation> triangulation_input,
+	const double c_value_input)
+    : DGBase<dim,real,MeshType>(nstate_input, parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, this->create_collection_tuple(max_degree_input, nstate_input, parameters_input), c_value_input)
 { }
 
 template <int dim, typename real, typename MeshType>
@@ -82,12 +83,14 @@ DGBase<dim,real,MeshType>::DGBase(
     const unsigned int max_degree_input,
     const unsigned int grid_degree_input,
     const std::shared_ptr<Triangulation> triangulation_input,
-    const MassiveCollectionTuple collection_tuple)
+    const MassiveCollectionTuple collection_tuple,
+	const double c_value_input)
     : all_parameters(parameters_input)
     , nstate(nstate_input)
     , initial_degree(degree)
     , max_degree(max_degree_input)
     , max_grid_degree(grid_degree_input)
+	, c_value(c_value_input)
     , triangulation(triangulation_input)
     , fe_collection(std::get<0>(collection_tuple))
     , volume_quadrature_collection(std::get<1>(collection_tuple))
@@ -277,8 +280,9 @@ DGBaseState<dim,nstate,real,MeshType>::DGBaseState(
     const unsigned int degree,
     const unsigned int max_degree_input,
     const unsigned int grid_degree_input,
-    const std::shared_ptr<Triangulation> triangulation_input)
-    : DGBase<dim,real,MeshType>::DGBase(nstate, parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input) // Use DGBase constructor
+    const std::shared_ptr<Triangulation> triangulation_input,
+	const double c_value_input)
+    : DGBase<dim,real,MeshType>::DGBase(nstate, parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input) // Use DGBase constructor
 {
     artificial_dissip = ArtificialDissipationFactory<dim,nstate> ::create_artificial_dissipation(parameters_input);
 
@@ -2388,8 +2392,8 @@ void DGBase<dim,real,MeshType>::evaluate_mass_matrices (bool do_inverse_mass_mat
     OPERATOR::mapping_shape_functions<dim,2*dim> mapping_basis(1, max_degree, init_grid_degree);//first set at max degree
     OPERATOR::basis_functions<dim,2*dim> basis(1, max_degree, init_grid_degree);
     OPERATOR::local_mass<dim,2*dim> reference_mass_matrix(1, max_degree, init_grid_degree);//first set at max degree
-    OPERATOR::local_Flux_Reconstruction_operator<dim,2*dim> reference_FR(1, max_degree, init_grid_degree, FR_Type);
-    OPERATOR::local_Flux_Reconstruction_operator_aux<dim,2*dim> reference_FR_aux(1, max_degree, init_grid_degree, FR_Type_Aux);
+    OPERATOR::local_Flux_Reconstruction_operator<dim,2*dim> reference_FR(1, max_degree, init_grid_degree, FR_Type, c_value);
+    OPERATOR::local_Flux_Reconstruction_operator_aux<dim,2*dim> reference_FR_aux(1, max_degree, init_grid_degree, FR_Type_Aux,c_value);
     OPERATOR::derivative_p<dim,2*dim> deriv_p(1, max_degree, init_grid_degree);
 
     auto first_cell = dof_handler.begin_active();
@@ -2731,11 +2735,11 @@ void DGBase<dim,real,MeshType>::apply_inverse_global_mass_matrix(
     const unsigned int init_grid_degree = high_order_grid->fe_system.tensor_degree();
     OPERATOR::mapping_shape_functions<dim,2*dim> mapping_basis(1, max_degree, init_grid_degree);
      
-    OPERATOR::FR_mass_inv<dim,2*dim> mass_inv(1, max_degree, init_grid_degree, FR_Type);
-    OPERATOR::FR_mass_inv_aux<dim,2*dim> mass_inv_aux(1, max_degree, init_grid_degree, FR_Type_Aux);
+    OPERATOR::FR_mass_inv<dim,2*dim> mass_inv(1, max_degree, init_grid_degree, FR_Type, c_value);
+    OPERATOR::FR_mass_inv_aux<dim,2*dim> mass_inv_aux(1, max_degree, init_grid_degree, FR_Type_Aux, c_value);
      
-    OPERATOR::vol_projection_operator_FR<dim,2*dim> projection_oper(1, max_degree, init_grid_degree, FR_Type, true);
-    OPERATOR::vol_projection_operator_FR_aux<dim,2*dim> projection_oper_aux(1, max_degree, init_grid_degree, FR_Type_Aux, true);
+    OPERATOR::vol_projection_operator_FR<dim,2*dim> projection_oper(1, max_degree, init_grid_degree, FR_Type, c_value, true);
+    OPERATOR::vol_projection_operator_FR_aux<dim,2*dim> projection_oper_aux(1, max_degree, init_grid_degree, FR_Type_Aux, c_value,  true);
      
     mapping_basis.build_1D_shape_functions_at_volume_flux_nodes(high_order_grid->oneD_fe_system, oneD_quadrature_collection[max_degree]);
      
@@ -2894,8 +2898,8 @@ void DGBase<dim,real,MeshType>::apply_global_mass_matrix(
     const unsigned int init_grid_degree = high_order_grid->fe_system.tensor_degree();
     OPERATOR::mapping_shape_functions<dim,2*dim> mapping_basis(1, max_degree, init_grid_degree);
      
-    OPERATOR::FR_mass<dim,2*dim> mass(1, max_degree, init_grid_degree, FR_Type);
-    OPERATOR::FR_mass_aux<dim,2*dim> mass_aux(1, max_degree, init_grid_degree, FR_Type_Aux);
+    OPERATOR::FR_mass<dim,2*dim> mass(1, max_degree, init_grid_degree, FR_Type, c_value);
+    OPERATOR::FR_mass_aux<dim,2*dim> mass_aux(1, max_degree, init_grid_degree, FR_Type_Aux, c_value);
      
     OPERATOR::vol_projection_operator<dim,2*dim> projection_oper(1, max_degree, init_grid_degree);
      

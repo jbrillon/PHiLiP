@@ -26,7 +26,8 @@ public:
         const unsigned int degree,
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
-        const std::shared_ptr<Triangulation> triangulation_input);
+        const std::shared_ptr<Triangulation> triangulation_input,
+		const double c_value_input = 0.0);
 
     /// Destructor
     ~DGStrong();

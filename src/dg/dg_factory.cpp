@@ -12,7 +12,8 @@ DGFactory<dim,real,MeshType>
     const unsigned int degree,
     const unsigned int max_degree_input,
     const unsigned int grid_degree_input,
-    const std::shared_ptr<Triangulation> triangulation_input)
+    const std::shared_ptr<Triangulation> triangulation_input,
+	const double c_value_input)
 {
     using PDE_enum   = Parameters::AllParameters::PartialDifferentialEquation;
     const PDE_enum pde_type = parameters_input->pde_type;
@@ -23,56 +24,56 @@ DGFactory<dim,real,MeshType>
 
     if (parameters_input->use_weak_form) {
         if (pde_type == PDE_enum::advection) {
-            return std::make_shared< DGWeak<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::advection_vector) {
-            return std::make_shared< DGWeak<dim,2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::diffusion) {
-            return std::make_shared< DGWeak<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::convection_diffusion) {
-            return std::make_shared< DGWeak<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::burgers_inviscid) {
-            return std::make_shared< DGWeak<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::burgers_viscous) {
-            return std::make_shared< DGWeak<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::burgers_rewienski) {
-            return std::make_shared< DGWeak<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::euler) {
-            return std::make_shared< DGWeak<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::navier_stokes) {
-            return std::make_shared< DGWeak<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if ((pde_type == PDE_enum::physics_model) && (model_type == Model_enum::reynolds_averaged_navier_stokes) && (rans_model_type == RANSModel_enum::SA_negative)) {
-            return std::make_shared< DGWeak<dim,dim+3,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,dim+3,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         }
 #if PHILIP_DIM==3
         else if ((pde_type == PDE_enum::physics_model) && (model_type == Model_enum::large_eddy_simulation)) {
-            return std::make_shared< DGWeak<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGWeak<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         }
 #endif
     } else {
         if (pde_type == PDE_enum::advection) {
-            return std::make_shared< DGStrong<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::advection_vector) {
-            return std::make_shared< DGStrong<dim,2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::diffusion) {
-            return std::make_shared< DGStrong<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::convection_diffusion) {
-            return std::make_shared< DGStrong<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,1,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::burgers_inviscid) {
-            return std::make_shared< DGStrong<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::burgers_viscous) {
-            return std::make_shared< DGStrong<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::burgers_rewienski) {
-            return std::make_shared< DGStrong<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,dim,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::euler) {
-            return std::make_shared< DGStrong<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if (pde_type == PDE_enum::navier_stokes) {
-            return std::make_shared< DGStrong<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         } else if ((pde_type == PDE_enum::physics_model) && (model_type == Model_enum::reynolds_averaged_navier_stokes) && (rans_model_type == RANSModel_enum::SA_negative)) {
-            return std::make_shared< DGStrong<dim,dim+3,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,dim+3,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         }
 #if PHILIP_DIM==3
         else if ((pde_type == PDE_enum::physics_model) && (model_type == Model_enum::large_eddy_simulation)) {
-            return std::make_shared< DGStrong<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input);
+            return std::make_shared< DGStrong<dim,dim+2,real,MeshType> >(parameters_input, degree, max_degree_input, grid_degree_input, triangulation_input, c_value_input);
         }
 #endif
     }
@@ -87,9 +88,10 @@ DGFactory<dim,real,MeshType>
     const Parameters::AllParameters *const parameters_input,
     const unsigned int degree,
     const unsigned int max_degree_input,
-    const std::shared_ptr<Triangulation> triangulation_input)
+    const std::shared_ptr<Triangulation> triangulation_input,
+	const double c_value_input)
 {
-    return create_discontinuous_galerkin(parameters_input, degree, max_degree_input, degree+1, triangulation_input);
+    return create_discontinuous_galerkin(parameters_input, degree, max_degree_input, degree+1, triangulation_input, c_value_input);
 }
 
 template <int dim, typename real, typename MeshType>
@@ -98,9 +100,10 @@ DGFactory<dim,real,MeshType>
 ::create_discontinuous_galerkin(
     const Parameters::AllParameters *const parameters_input,
     const unsigned int degree,
-    const std::shared_ptr<Triangulation> triangulation_input)
+    const std::shared_ptr<Triangulation> triangulation_input,
+	const double c_value_input)
 {
-    return create_discontinuous_galerkin(parameters_input, degree, degree, triangulation_input);
+    return create_discontinuous_galerkin(parameters_input, degree, degree, triangulation_input, c_value_input);
 }
 
 template class DGFactory <PHILIP_DIM, double, dealii::Triangulation<PHILIP_DIM>>;

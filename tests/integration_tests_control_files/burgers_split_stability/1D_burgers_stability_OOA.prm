@@ -8,7 +8,7 @@ set overintegration = 0
 
 set flux_nodes_type = GL
 
-set use_split_form = true
+set use_split_form = false
 
 set use_energy = false
 
