@@ -41,6 +41,7 @@
 #include "euler_entropy_conserving_split_forms_check.h"
 #include "homogeneous_isotropic_turbulence_initialization_check.h"
 #include "khi_robustness.h"
+#include "flow_solver_metric_field_evaluation.h"
 
 namespace PHiLiP {
 namespace Tests {
@@ -279,6 +280,7 @@ std::unique_ptr< TestsBase > TestsFactory<dim,nstate,MeshType>
         if constexpr (dim==2 && nstate==1)  return std::make_unique<DualWeightedResidualMeshAdaptation<dim, nstate>>(parameters_input,parameter_handler_input);
     } else if(test_type == Test_enum::taylor_green_vortex_energy_check) {
         if constexpr (dim==3 && nstate==dim+2) return std::make_unique<TaylorGreenVortexEnergyCheck<dim,nstate>>(parameters_input,parameter_handler_input);
+        if constexpr (dim==2 && nstate==dim+2) return std::make_unique<FlowSolverMetricFieldEvaluation<dim,nstate>>(parameters_input,parameter_handler_input);
     } else if(test_type == Test_enum::taylor_green_vortex_restart_check) {
         if constexpr (dim==3 && nstate==dim+2) return std::make_unique<TaylorGreenVortexRestartCheck<dim,nstate>>(parameters_input,parameter_handler_input);
     } else if(test_type == Test_enum::homogeneous_isotropic_turbulence_initialization_check){

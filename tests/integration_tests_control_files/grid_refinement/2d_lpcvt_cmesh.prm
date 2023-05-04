@@ -1,0 +1,104 @@
+# Listing of Parameters
+# ---------------------
+set dimension = 2
+set pde_type  = euler
+
+# set test_type = flow_solver_metric_field_evaluation
+set test_type = taylor_green_vortex_energy_check
+
+
+set conv_num_flux = roe
+set diss_num_flux = bassi_rebay_2
+
+set use_split_form = false
+
+subsection artificial dissipation
+  set add_artificial_dissipation = false
+end
+
+set overintegration = 0
+
+subsection euler
+  set reference_length = 1.0
+  set mach_infinity = 0.1
+  set angle_of_attack = 0.0
+end
+
+subsection linear solver
+  subsection gmres options
+    # Factor by which the diagonal of the matrix will be scaled, which
+    # sometimes can help to get better preconditioners
+    set ilut_atol                 = 1e-4
+    # Amount of an absolute perturbation that will be added to the diagonal of
+    # the matrix, which sometimes can help to get better preconditioners
+    set ilut_rtol                 = 1.00001
+    # relative size of elements which should be dropped when forming an
+    # incomplete lu decomposition with threshold
+    set ilut_drop                 = 0.0
+    # Amount of additional fill-in elements besides the sparse matrix
+    # structure
+    set ilut_fill                 = 10
+    # Linear residual tolerance for convergence of the linear system
+    set linear_residual_tolerance = 1e-13
+    # Maximum number of iterations for linear solver
+    set max_iterations            = 2000
+    # Number of iterations before restarting GMRES
+    set restart_number            = 200
+  end
+end
+
+subsection ODE solver
+  set output_solution_every_x_steps = 1
+  set nonlinear_max_iterations = 2000
+  set nonlinear_steady_residual_tolerance = 1e-12
+  set ode_solver_type  = implicit
+  set initial_time_step = 1e3
+  set time_step_factor_residual = 15.0
+  set time_step_factor_residual_exp = 2
+  set print_iteration_modulo = 1
+end
+
+subsection flow_solver
+  set flow_case_type = naca0012
+  set poly_degree = 1
+  set steady_state = true
+  subsection grid
+    set input_mesh_filename = ../../meshes/naca0012_hopw_ref0
+  end
+end
+
+subsection grid refinement study
+  # settings for lpcvt runs
+  subsection grid refinement
+    set refinement_steps  = 1
+    set refinement_method = continuous
+    set refinement_type   = h
+
+    set anisotropic = true
+
+    # trial and error to figure these 2 out
+    set anisotropic_ratio_min = 0.2
+    set anisotropic_ratio_max = 5
+
+    set error_indicator = hessian_based
+    set norm_Lq = 2.0
+
+    # manually select complexity target, example progressions starting from 16x16 uniform grid
+    # p=1, 1.5x
+    # set complexity_vector = [1024, 1536, 2304, 3456, 5184, 7776, 11664, 17496, 26244, 39366, 59049]
+    # p=2, 1.5x
+    # set complexity_vector = [2304, 3456, 5184, 7776, 11664, 17496, 26244, 39366, 59049, 88574]
+    # p=3, 1.5x
+    # set complexity_vector = [4096, 6144, 9216, 13824, 20736, 31104, 46656, 69984, 104976, 157464]
+
+    # trial and error
+    set complexity_vector = [7776]
+
+    set output_type = msh_out
+    set output_data_type = metric_field
+
+    # to avoid error with msh write (exit immediately)
+    set exit_after_refine = true
+  end
+
+end

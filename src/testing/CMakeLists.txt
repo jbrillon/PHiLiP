@@ -33,6 +33,7 @@ set(TESTS_SOURCE
     euler_entropy_conserving_split_forms_check.cpp
     homogeneous_isotropic_turbulence_initialization_check.cpp
     khi_robustness.cpp
+    flow_solver_metric_field_evaluation.cpp
     )
 
 foreach(dim RANGE 1 3)
