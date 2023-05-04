@@ -316,6 +316,7 @@ std::unique_ptr< TestsBase > TestsFactory<dim,nstate,MeshType>
     // without having 15 different if-else statements
     if(dim == parameters_input->dimension)
     {
+		std::cout<<"Here 1.3"<<std::endl;
         // This template parameters dim and nstate match the runtime parameters
         // then create the selected test with template parameters dim and nstate
         // Otherwise, keep decreasing nstate and dim until it matches
@@ -333,6 +334,7 @@ std::unique_ptr< TestsBase > TestsFactory<dim,nstate,MeshType>
     }
     else
     {
+		std::cout<<"Here 1.4"<<std::endl;
         return nullptr;
     }
 }

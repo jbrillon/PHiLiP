@@ -1,5 +1,6 @@
-set test_type = burgers_energy_stability
-
+#-----------------------------
+#set test_type = burgers_energy_stability
+set test_type =advection_periodicity
 set dimension = 1
 
 set use_weak_form = false
@@ -24,8 +25,8 @@ set use_inverse_mass_on_the_fly = true
 
 #set use_skew_sym_deriv = false
 
-set pde_type = burgers_inviscid
-
+#set pde_type = burgers_inviscid
+set pde_type = advection
 set conv_num_flux = lax_friedrichs
 #set conv_num_flux = central_flux
 #set conv_num_flux = two_point_flux_with_lax_friedrichs_dissipation
@@ -52,5 +53,6 @@ subsection manufactured solution convergence study
 end
 
 subsection flow_solver
-    set flow_case_type = burgers_inviscid
+    #set flow_case_type = burgers_inviscid
+    set flow_case_type = convection_diffusion
 end

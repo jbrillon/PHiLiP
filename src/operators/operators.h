@@ -530,7 +530,7 @@ public:
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
         const Parameters::AllParameters::Flux_Reconstruction FR_param_input,
-        const double c_value_input = 0.0);
+        const double c_value_input);
     ///Destructor.
     ~local_Flux_Reconstruction_operator () {};
 
@@ -652,7 +652,7 @@ public:
         const unsigned int max_degree_input,
         const unsigned int grid_degree_input,
         const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_aux_input,
-        const double c_value_input = 0.0);
+        const double c_value_input);
 
     ///Destructor.
     ~local_Flux_Reconstruction_operator_aux () {};
