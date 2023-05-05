@@ -1162,7 +1162,6 @@ local_Flux_Reconstruction_operator<dim,n_faces>::local_Flux_Reconstruction_opera
 {
     //Initialize to the max degrees
     current_degree      = max_degree_input;
-	std::cout<<"c_value = "<<c_value<<std::endl;
     //get the FR corrcetion parameter value
     get_FR_correction_parameter(this->max_degree, FR_param);
 }
@@ -1262,7 +1261,6 @@ void local_Flux_Reconstruction_operator<dim,n_faces>::get_FR_correction_paramete
     }
 */
 	c = c_value;
-	std::cout<<"c_value = "<<c_value<<std::endl;
 	(void) curr_cell_degree;
 }
 template <int dim, int n_faces>  
@@ -1402,14 +1400,13 @@ local_Flux_Reconstruction_operator_aux<dim,n_faces>::local_Flux_Reconstruction_o
     const unsigned int max_degree_input,
     const unsigned int grid_degree_input,
     const Parameters::AllParameters::Flux_Reconstruction_Aux FR_param_aux_input,
-	const double/* c_value_input*/)
-    : local_Flux_Reconstruction_operator<dim,n_faces>::local_Flux_Reconstruction_operator(nstate_input, max_degree_input, grid_degree_input, Parameters::AllParameters::Flux_Reconstruction::cDG,0.0)
+	const double c_value_input)
+    : local_Flux_Reconstruction_operator<dim,n_faces>::local_Flux_Reconstruction_operator(nstate_input, max_degree_input, grid_degree_input, Parameters::AllParameters::Flux_Reconstruction::cDG,c_value_input)
     , FR_param_aux_type(FR_param_aux_input)
-	, c_value(0.0)
+	, c_value(c_value_input)
 {
     //Initialize to the max degrees
     current_degree      = max_degree_input;
-	std::cout<<"c_value = "<<c_value<<std::endl;
     //get the FR corrcetion parameter value
     get_FR_aux_correction_parameter(this->max_degree, FR_param_aux);
 }
@@ -1419,7 +1416,7 @@ void local_Flux_Reconstruction_operator_aux<dim,n_faces>::get_FR_aux_correction_
                                 const unsigned int curr_cell_degree,
                                 double &k)
 {
-
+/*
     using FR_Aux_enum = Parameters::AllParameters::Flux_Reconstruction_Aux;
     if(FR_param_aux_type == FR_Aux_enum::kHU){ 
         this->get_Huynh_g2_parameter(curr_cell_degree, k); 
@@ -1442,9 +1439,8 @@ void local_Flux_Reconstruction_operator_aux<dim,n_faces>::get_FR_aux_correction_
     else if(FR_param_aux_type == FR_Aux_enum::kPlus){ 
         this->get_c_plus_parameter(curr_cell_degree, k); 
     }
-
-	//k = c_value;
-	std::cout<<"k = "<<k<<std::endl;
+*/
+	k = c_value;
 	(void) curr_cell_degree;
 }
 template <int dim, int n_faces>  

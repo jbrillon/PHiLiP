@@ -169,19 +169,18 @@ int AdvectionPeriodic<dim, nstate>::run_test() const
 
         //set the warped grid
         PHiLiP::Grids::nonsymmetric_curved_grid<dim,Triangulation>(*grid, igrid);
-		std::cout<<"Here 4"<<std::endl;
 
         //CFL number
         const unsigned int n_global_active_cells2 = grid->n_global_active_cells();
         double n_dofs_cfl = pow(n_global_active_cells2,dim) * pow(poly_degree+1.0, dim);
         double delta_x = (right-left)/pow(n_dofs_cfl,(1.0/dim)); 
-        //all_parameters_new.ode_solver_param.initial_time_step =  delta_x /(1.0*(2.0*poly_degree+1)) ;
-         all_parameters_new.ode_solver_param.initial_time_step =  (all_parameters_new.use_energy) ? 0.05*delta_x : 0.5*delta_x;
+        all_parameters_new.ode_solver_param.initial_time_step =  delta_x /(1.0*(2.0*poly_degree+1)) ;
+        all_parameters_new.ode_solver_param.initial_time_step =  (all_parameters_new.use_energy) ? 0.05*delta_x : 0.5*delta_x;
         std::cout << "dt " <<all_parameters_new.ode_solver_param.initial_time_step <<  std::endl;
         std::cout << "cells " <<n_global_active_cells2 <<  std::endl;
 
         //Set the DG spatial sys
-        std::shared_ptr < PHiLiP::DGBase<dim, double> > dg = PHiLiP::DGFactory<dim,double>::create_discontinuous_galerkin(&all_parameters_new, poly_degree, poly_degree, grid_degree, grid,c_value);
+        std::shared_ptr < PHiLiP::DGBase<dim, double> > dg = PHiLiP::DGFactory<dim,double>::create_discontinuous_galerkin(&all_parameters_new, poly_degree, poly_degree, grid_degree, grid);
         dg->allocate_system ();
 
         std::cout << "Implement initial conditions" << std::endl;
@@ -189,7 +188,6 @@ int AdvectionPeriodic<dim, nstate>::run_test() const
         std::shared_ptr< InitialConditionFunction<dim,nstate,double> > initial_condition_function = 
                 InitialConditionFactory<dim,nstate,double>::create_InitialConditionFunction(&all_parameters_new); 
         SetInitialCondition<dim,nstate,double>::set_initial_condition(initial_condition_function, dg, &all_parameters_new);
-		std::cout<<"Here 5"<<std::endl;
 
         // Create ODE solver using the factory and providing the DG object
         std::shared_ptr<PHiLiP::ODE::ODESolverBase<dim, double>> ode_solver = PHiLiP::ODE::ODESolverFactory<dim, double>::create_ODESolver(dg);
