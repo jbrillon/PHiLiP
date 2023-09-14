@@ -1437,10 +1437,13 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             soln_basis.inner_product_1D(conv_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, false, -1.0);
         }
 
-        // Diffusive
+        // Diffusive -- note: this is where we would implemented the basis partitioning needed for the full DG-VMS approach
         // Note that for diffusion, the negative is defined in the physics. Since we used the auxiliary
         // variable, put a negative here.
         soln_basis.inner_product_1D(diffusive_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, true, -1.0);
+
+        // however, it would be better to do something like this:
+        // soln_basis.inner_product_1D(model_diffusive_flux_divergence, vol_quad_weights, rhs, projected_and_truncated_soln_basis.oneD_vol_operator, true, -1.0);
 
         // Manufactured source
         if(this->all_parameters->manufactured_convergence_study_param.manufactured_solution_param.use_manufactured_source_term) {
