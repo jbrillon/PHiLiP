@@ -1166,6 +1166,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
     //For curvilinear split-form in Eq. (22), we apply a two-pt flux of the metric-cofactor matrix on the matrix operator constructed by the entropy stable/conservtive 2pt flux.
     std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> conv_ref_flux_at_q;
     std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> diffusive_ref_flux_at_q;
+    // std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> model_diffusive_ref_flux_at_q;
     std::array<std::vector<real>,nstate> source_at_q;
     std::array<std::vector<real>,nstate> physical_source_at_q;
 
@@ -1282,6 +1283,11 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         //Compute the physical dissipative flux
         diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
 
+        //Diffusion
+        // std::array<dealii::Tensor<1,dim,real>,nstate> model_diffusive_phys_flux;
+        //Compute the physical model dissipative flux
+        // if(do_vms) model_diffusive_phys_flux = this->pde_model_double->dissipative_flux(filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+
         // Manufactured source
         std::array<real,nstate> manufactured_source;
         if(this->all_parameters->manufactured_convergence_study_param.manufactured_solution_param.use_manufactured_source_term) {
@@ -1308,6 +1314,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         for(int istate=0; istate<nstate; istate++){
             dealii::Tensor<1,dim,real> conv_ref_flux;
             dealii::Tensor<1,dim,real> diffusive_ref_flux;
+            // dealii::Tensor<1,dim,real> model_diffusive_ref_flux;
             //Trnasform to reference fluxes
             if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
                 //Do Nothing. 
@@ -1329,6 +1336,14 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 metric_cofactor,
                 diffusive_ref_flux);
 
+            // if(do_vms) {
+            //     //transform the model dissipative flux to reference space
+            //     metric_oper.transform_physical_to_reference(
+            //         model_diffusive_phys_flux[istate],
+            //         metric_cofactor,
+            //         model_diffusive_ref_flux);
+            // }
+
             //Write the data in a way that we can use sum-factorization on.
             //Since sum-factorization improves the speed for matrix-vector multiplications,
             //We need the values to have their inner elements be vectors.
@@ -1337,6 +1352,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 if(iquad == 0){
                     conv_ref_flux_at_q[istate][idim].resize(n_quad_pts);
                     diffusive_ref_flux_at_q[istate][idim].resize(n_quad_pts);
+                    // model_diffusive_ref_flux_at_q[istate][idim].resize(n_quad_pts);
                 }
                 //write data
                 if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
@@ -1347,6 +1363,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 }
 
                 diffusive_ref_flux_at_q[istate][idim][iquad] = diffusive_ref_flux[idim];
+                // if(do_vms) {
+                //     model_diffusive_ref_flux_at_q[istate][idim][iquad] = model_diffusive_ref_flux[idim];    
+                // }
             }
             if(this->all_parameters->manufactured_convergence_study_param.manufactured_solution_param.use_manufactured_source_term) {
                 if(iquad == 0){
@@ -1384,6 +1403,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         //Compute reference divergence of the reference fluxes.
         std::vector<real> conv_flux_divergence(n_quad_pts); 
         std::vector<real> diffusive_flux_divergence(n_quad_pts); 
+        // std::vector<real> model_diffusive_flux_divergence(n_quad_pts); 
 
         if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
             //2pt flux Hadamard Product, and then multiply by vector of ones scaled by 1.
@@ -1417,6 +1437,12 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                                                     flux_basis.oneD_vol_operator,
                                                     flux_basis.oneD_grad_operator);
 
+        // if(do_vms) {
+        //     //Reference divergence of the reference model diffusive flux.
+        //     flux_basis.divergence_matrix_vector_mult_1D(model_diffusive_ref_flux_at_q[istate], model_diffusive_flux_divergence,
+        //                                                 flux_basis.oneD_vol_operator,
+        //                                                 flux_basis.oneD_grad_operator);
+        // }        
 
         // Strong form
         // The right-hand side sends all the term to the side of the source term
@@ -1443,7 +1469,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         soln_basis.inner_product_1D(diffusive_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, true, -1.0);
 
         // however, it would be better to do something like this:
+        // if(do_vms) {
         // soln_basis.inner_product_1D(model_diffusive_flux_divergence, vol_quad_weights, rhs, projected_and_truncated_soln_basis.oneD_vol_operator, true, -1.0);
+        // }
 
         // Manufactured source
         if(this->all_parameters->manufactured_convergence_study_param.manufactured_solution_param.use_manufactured_source_term) {
@@ -2111,16 +2139,31 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_boundary_term_strong(
             filtered_aux_soln_state, grad_soln_boundary,
             unit_phys_normal_int, penalty, true, boundary_id);
 
+        // Model Dissipative numerical flux -- WARNING: Not so sure about this part here... would have to have like 2 diss num flux objects;
+        // one for the actual physics above, and one for the model terms
+        // std::array<real,nstate> model_diss_auxi_num_flux_dot_n_at_q;
+        // model_diss_auxi_num_flux_dot_n_at_q = this->diss_num_flux_double->evaluate_auxiliary_flux(
+        //     current_cell_index, current_cell_index,
+        //     0.0, 0.0,
+        //     soln_state, soln_boundary,
+        //     aux_soln_state, grad_soln_boundary,
+        //     filtered_soln_state, soln_boundary,
+        //     filtered_aux_soln_state, grad_soln_boundary,
+        //     unit_phys_normal_int, penalty, true);
+
         for(int istate=0; istate<nstate; istate++){
             // allocate
             if(iquad==0){
                 conv_flux_dot_normal[istate].resize(n_face_quad_pts);
                 diss_flux_dot_normal_diff[istate].resize(n_face_quad_pts);
+                // model_diss_flux_dot_normal_diff[istate].resize(n_face_quad_pts);
             }
             // write data
             conv_flux_dot_normal[istate][iquad] = face_Jac_norm_scaled * conv_num_flux_dot_n_at_q[istate];
             diss_flux_dot_normal_diff[istate][iquad] = face_Jac_norm_scaled * diss_auxi_num_flux_dot_n_at_q[istate]
                                                      - diffusive_int_vol_ref_flux_interp_to_face_dot_ref_normal[istate][iquad];
+            // if(do_vms) model_diss_flux_dot_normal_diff[istate][iquad] = face_Jac_norm_scaled * model_diss_auxi_num_flux_dot_n_at_q[istate]
+            //                                          - model_diffusive_int_vol_ref_flux_interp_to_face_dot_ref_normal[istate][iquad];
         }
     }
 
@@ -2161,6 +2204,13 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_boundary_term_strong(
                                             soln_basis.oneD_surf_operator, 
                                             soln_basis.oneD_vol_operator,
                                             true, -1.0);//adding=true, scaled by factor=-1.0 bc subtract it
+
+        //Model dissipative surface numerical flux.
+        // if(do_vms) soln_basis.inner_product_surface_1D(iface, model_diss_flux_dot_normal_diff[istate], 
+        //                                     face_quad_weights, rhs, 
+        //                                     soln_basis.oneD_surf_operator, 
+        //                                     soln_basis.oneD_vol_operator,
+        //                                     true, -1.0);//adding=true, scaled by factor=-1.0 bc subtract it
 
         for(unsigned int ishape=0; ishape<n_shape_fns; ishape++){
             local_rhs_cell(istate*n_shape_fns + ishape) += rhs[ishape];
