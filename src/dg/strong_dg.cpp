@@ -30,6 +30,7 @@ DGStrong<dim,nstate,real,MeshType>::DGStrong(
     , do_compute_filtered_solution(this->all_parameters->physics_model_param.do_compute_filtered_solution)
     , apply_modal_high_pass_filter_on_filtered_solution(this->all_parameters->physics_model_param.apply_modal_high_pass_filter_on_filtered_solution)
     , poly_degree_max_large_scales(this->all_parameters->physics_model_param.poly_degree_max_large_scales)
+    , do_filter_dissipative_flux(this->all_parameters->physics_model_param.do_filter_dissipative_flux)
 { }
 
 // Destructor
@@ -898,7 +899,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
     OPERATOR::metric_operators<real,dim,2*dim>             &metric_oper,
     dealii::Vector<real>                                   &local_rhs_int_cell)
 {
-    (void) current_cell_index;
+    (void) current_cell_index; // TO DO: Could remove this line; it does nothing to current_cell_index
 
     const unsigned int n_quad_pts  = this->volume_quadrature_collection[poly_degree].size();
     const unsigned int n_dofs_cell = this->fe_collection[poly_degree].dofs_per_cell;
@@ -1186,9 +1187,19 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         flux_basis.sum_factorized_Hadamard_sparsity_pattern(n_quad_pts_1D, n_quad_pts_1D, Hadamard_rows_sparsity, Hadamard_columns_sparsity);
     }
 
-
+    //==================================================
+    // GET THE DISSIPATIVE FLUX
+    //==================================================
+    std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> diffusive_phys_flux_at_q; // dissipative flux computed at flux nodes
+    // Resize the dissipative flux array
+    for(int istate=0; istate<nstate; istate++){
+        for(int idim=0; idim<dim; idim++){
+            diffusive_phys_flux_at_q[istate][idim].resize(n_quad_pts);
+        }
+    }
+    // Compute the primitive soln at all iquad and fill arrays
     for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
-        //extract soln and auxiliary soln at quad pt to be used in physics
+        // extract conservative soln state
         std::array<real,nstate> soln_state;
         std::array<dealii::Tensor<1,dim,real>,nstate> aux_soln_state;
         std::array<real,nstate> filtered_soln_state;
@@ -1199,6 +1210,46 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             for(int idim=0; idim<dim; idim++){
                 aux_soln_state[istate][idim] = aux_soln_at_q[istate][idim][iquad];
                 if(this->do_compute_filtered_solution) filtered_aux_soln_state[istate][idim] = legendre_aux_soln_at_q[istate][idim][iquad];
+            }
+        }
+        // if using split form, then we get the solution from the projected entropy variables
+        if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
+            //get the soln for iquad from projected entropy variables
+            std::array<real,nstate> entropy_var;
+            for(int istate=0; istate<nstate; istate++){
+                entropy_var[istate] = projected_entropy_var_at_q[istate][iquad];
+            }
+            soln_state = this->pde_physics_double->compute_conservative_variables_from_entropy_variables (entropy_var);
+        }
+
+        // compute dissipative flux from conservative
+        std::array<dealii::Tensor<1,dim,real>,nstate> diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+        // store dissipative flux at quadrature point
+        for(int istate=0; istate<nstate; istate++){
+            for(int idim=0; idim<dim; idim++){
+               diffusive_phys_flux_at_q[istate][idim][iquad] = diffusive_phys_flux[istate][idim];
+            }
+        }
+    }
+
+    for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
+        //extract soln and auxiliary soln at quad pt to be used in physics
+        std::array<real,nstate> soln_state;
+        std::array<dealii::Tensor<1,dim,real>,nstate> aux_soln_state;
+        std::array<real,nstate> filtered_soln_state;
+        std::array<dealii::Tensor<1,dim,real>,nstate> filtered_aux_soln_state;
+        std::array<dealii::Tensor<1,dim,real>,nstate> diffusive_phys_flux;
+        for(int istate=0; istate<nstate; istate++){
+            soln_state[istate] = soln_at_q[istate][iquad];
+            if(this->do_compute_filtered_solution) filtered_soln_state[istate] = legendre_soln_at_q[istate][iquad];
+            for(int idim=0; idim<dim; idim++){
+                aux_soln_state[istate][idim] = aux_soln_at_q[istate][idim][iquad];
+                if(this->do_compute_filtered_solution) filtered_aux_soln_state[istate][idim] = legendre_aux_soln_at_q[istate][idim][iquad];
+            }
+            //extract the filtered dissipative flux
+            for(int idim=0; idim<dim; idim++){
+                diffusive_phys_flux[istate][idim] = diffusive_phys_flux_at_q[istate][idim][iquad];
+                /*if(this->do_filter_dissipative_flux)*/ 
             }
         }
 
@@ -1223,6 +1274,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 entropy_var[istate] = projected_entropy_var_at_q[istate][iquad];
             }
             soln_state = this->pde_physics_double->compute_conservative_variables_from_entropy_variables (entropy_var);
+            // TO DO: confirm that this is what should be passed to dissipative_flux below
             
             //loop over all the non-zero entries for "sum-factorized" Hadamard product that corresponds to the iquad.
             for(unsigned int row_index = iquad * n_quad_pts_1D, column_index = 0; 
@@ -1278,9 +1330,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         }
 
         //Diffusion
-        std::array<dealii::Tensor<1,dim,real>,nstate> diffusive_phys_flux;
+        // std::array<dealii::Tensor<1,dim,real>,nstate> diffusive_phys_flux;
         //Compute the physical dissipative flux
-        diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+        // diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
 
         // Manufactured source
         std::array<real,nstate> manufactured_source;
