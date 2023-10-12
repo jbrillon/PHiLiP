@@ -1233,6 +1233,52 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         }
     }
 
+    //==================================================
+    // GET THE MODEL DISSIPATIVE FLUX
+    //==================================================
+    std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> model_diffusive_phys_flux_at_q; // model dissipative flux computed at flux nodes
+    // Resize the model dissipative flux array
+    for(int istate=0; istate<nstate; istate++){
+        for(int idim=0; idim<dim; idim++){
+            model_diffusive_phys_flux_at_q[istate][idim].resize(n_quad_pts);
+        }
+    }
+    // Compute the primitive soln at all iquad and fill arrays
+    for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
+        // extract conservative soln state
+        std::array<real,nstate> soln_state;
+        std::array<dealii::Tensor<1,dim,real>,nstate> aux_soln_state;
+        std::array<real,nstate> filtered_soln_state;
+        std::array<dealii::Tensor<1,dim,real>,nstate> filtered_aux_soln_state;
+        for(int istate=0; istate<nstate; istate++){
+            soln_state[istate] = soln_at_q[istate][iquad];
+            if(this->do_compute_filtered_solution) filtered_soln_state[istate] = legendre_soln_at_q[istate][iquad];
+            for(int idim=0; idim<dim; idim++){
+                aux_soln_state[istate][idim] = aux_soln_at_q[istate][idim][iquad];
+                if(this->do_compute_filtered_solution) filtered_aux_soln_state[istate][idim] = legendre_aux_soln_at_q[istate][idim][iquad];
+            }
+        }
+        // if using split form, then we get the solution from the projected entropy variables
+        if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
+            //get the soln for iquad from projected entropy variables
+            std::array<real,nstate> entropy_var;
+            for(int istate=0; istate<nstate; istate++){
+                entropy_var[istate] = projected_entropy_var_at_q[istate][iquad];
+            }
+            soln_state = this->pde_physics_double->compute_conservative_variables_from_entropy_variables (entropy_var);// TO DO: THIS COULD CAUSE ISSUES IF NOT CAREFUL
+        }
+
+        // compute dissipative flux from conservative -- USING MODEL HERE
+        std::array<dealii::Tensor<1,dim,real>,nstate> model_diffusive_phys_flux = this->pde_model_double->dissipative_flux(filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+        // store model dissipative flux at quadrature point
+        for(int istate=0; istate<nstate; istate++){
+            for(int idim=0; idim<dim; idim++){
+               model_diffusive_phys_flux_at_q[istate][idim][iquad] = model_diffusive_phys_flux[istate][idim];
+            }
+        }
+    }
+    // TO DO: do the filtering on the model_diffusive_phys_flux:
+
     for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
         //extract soln and auxiliary soln at quad pt to be used in physics
         std::array<real,nstate> soln_state;
@@ -1240,6 +1286,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         std::array<real,nstate> filtered_soln_state;
         std::array<dealii::Tensor<1,dim,real>,nstate> filtered_aux_soln_state;
         std::array<dealii::Tensor<1,dim,real>,nstate> diffusive_phys_flux;
+        std::array<dealii::Tensor<1,dim,real>,nstate> filtered_model_diffusive_phys_flux;
         for(int istate=0; istate<nstate; istate++){
             soln_state[istate] = soln_at_q[istate][iquad];
             if(this->do_compute_filtered_solution) filtered_soln_state[istate] = legendre_soln_at_q[istate][iquad];
@@ -1251,6 +1298,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             for(int idim=0; idim<dim; idim++){
                 diffusive_phys_flux[istate][idim] = diffusive_phys_flux_at_q[istate][idim][iquad];
                 /*if(this->do_filter_dissipative_flux)*/ 
+                if(do_vms) filtered_model_diffusive_phys_flux = filtered_model_diffusive_phys_flux_at_q[istate][idim][iquad];
             }
         }
 
@@ -1523,6 +1571,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
 
         // -- note: this is where we would implemented the basis partitioning needed for the full DG-VMS approach
         // however, it would be better to do something like this:
+        // i should simply compute model_diffusive_flux_divergence then manually filter it here
         if(do_vms) {
             soln_basis.inner_product_1D(filtered_model_diffusive_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, true, -1.0);
         }
