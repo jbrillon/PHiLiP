@@ -68,6 +68,10 @@ void PhysicsModelParam::declare_parameters (dealii::ParameterHandler &prm)
                               "This represents the maximum polynomial order for the large scales. "
                               "Warning: This must be less than the poly_degree of the solution.");
 
+            prm.declare_entry("do_filter_dissipative_flux", "false",
+                              dealii::Patterns::Bool(),
+                              "Flag to apply variational-multiscale (VMS) filtering on the dissipative flux. By default, false.");
+
         }
         prm.leave_subsection();
 
@@ -120,6 +124,7 @@ void PhysicsModelParam::parse_parameters (dealii::ParameterHandler &prm)
             apply_modal_high_pass_filter_on_filtered_solution 
                                                = prm.get_bool("apply_modal_high_pass_filter_on_filtered_solution");
             poly_degree_max_large_scales       = prm.get_integer("poly_degree_max_large_scales");
+            do_filter_dissipative_flux         = prm.get_bool("do_filter_dissipative_flux");
         }
         prm.leave_subsection();
 

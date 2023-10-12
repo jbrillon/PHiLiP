@@ -48,6 +48,7 @@ public:
     bool do_compute_filtered_solution; ///< Flag to compute the filtered solution
     bool apply_modal_high_pass_filter_on_filtered_solution; ///< Flag to apply modal high pass filter on the filtered solution
     unsigned int poly_degree_max_large_scales; ///< Max poly degree representing the large scales for LES VMS filtering
+    bool do_filter_dissipative_flux; ///< Flag to apply variational-multiscale (VMS) filtering on the dissipative flux
 
     /// Declares the possible variables and sets the defaults.
     static void declare_parameters (dealii::ParameterHandler &prm);
