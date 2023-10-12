@@ -1283,10 +1283,12 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         //Compute the physical dissipative flux
         diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
 
-        //Diffusion
-        // std::array<dealii::Tensor<1,dim,real>,nstate> model_diffusive_phys_flux;
+        //Filtered Model Diffusion Terms
+        std::array<dealii::Tensor<1,dim,real>,nstate> filtered_model_diffusive_phys_flux;
         //Compute the physical model dissipative flux
-        // if(do_vms) model_diffusive_phys_flux = this->pde_model_double->dissipative_flux(filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+        if(do_vms) filtered_model_diffusive_phys_flux = this->pde_model_double->dissipative_flux(filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+        // NOTE: This is where I access the filtered stored filtered_model_diffusive_phys_flux
+
 
         // Manufactured source
         std::array<real,nstate> manufactured_source;
@@ -1314,7 +1316,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         for(int istate=0; istate<nstate; istate++){
             dealii::Tensor<1,dim,real> conv_ref_flux;
             dealii::Tensor<1,dim,real> diffusive_ref_flux;
-            // dealii::Tensor<1,dim,real> model_diffusive_ref_flux;
+            dealii::Tensor<1,dim,real> filtered_model_diffusive_ref_flux;
             //Trnasform to reference fluxes
             if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
                 //Do Nothing. 
@@ -1336,13 +1338,13 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 metric_cofactor,
                 diffusive_ref_flux);
 
-            // if(do_vms) {
-            //     //transform the model dissipative flux to reference space
-            //     metric_oper.transform_physical_to_reference(
-            //         model_diffusive_phys_flux[istate],
-            //         metric_cofactor,
-            //         model_diffusive_ref_flux);
-            // }
+            if(do_vms) {
+                //transform the filtered model dissipative flux to reference space
+                metric_oper.transform_physical_to_reference(
+                    filtered_model_diffusive_phys_flux[istate],
+                    metric_cofactor,
+                    filtered_model_diffusive_ref_flux);
+            }
 
             //Write the data in a way that we can use sum-factorization on.
             //Since sum-factorization improves the speed for matrix-vector multiplications,
@@ -1352,7 +1354,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 if(iquad == 0){
                     conv_ref_flux_at_q[istate][idim].resize(n_quad_pts);
                     diffusive_ref_flux_at_q[istate][idim].resize(n_quad_pts);
-                    // model_diffusive_ref_flux_at_q[istate][idim].resize(n_quad_pts);
+                    filtered_model_diffusive_ref_flux_at_q[istate][idim].resize(n_quad_pts);
                 }
                 //write data
                 if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
@@ -1363,9 +1365,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 }
 
                 diffusive_ref_flux_at_q[istate][idim][iquad] = diffusive_ref_flux[idim];
-                // if(do_vms) {
-                //     model_diffusive_ref_flux_at_q[istate][idim][iquad] = model_diffusive_ref_flux[idim];    
-                // }
+                if(do_vms) {
+                    filtered_model_diffusive_ref_flux_at_q[istate][idim][iquad] = filtered_model_diffusive_ref_flux[idim];
+                }
             }
             if(this->all_parameters->manufactured_convergence_study_param.manufactured_solution_param.use_manufactured_source_term) {
                 if(iquad == 0){
@@ -1403,7 +1405,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         //Compute reference divergence of the reference fluxes.
         std::vector<real> conv_flux_divergence(n_quad_pts); 
         std::vector<real> diffusive_flux_divergence(n_quad_pts); 
-        // std::vector<real> model_diffusive_flux_divergence(n_quad_pts); 
+        std::vector<real> filtered_model_diffusive_flux_divergence(n_quad_pts); 
 
         if (this->all_parameters->use_split_form || this->all_parameters->use_curvilinear_split_form){
             //2pt flux Hadamard Product, and then multiply by vector of ones scaled by 1.
@@ -1437,12 +1439,12 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                                                     flux_basis.oneD_vol_operator,
                                                     flux_basis.oneD_grad_operator);
 
-        // if(do_vms) {
-        //     //Reference divergence of the reference model diffusive flux.
-        //     flux_basis.divergence_matrix_vector_mult_1D(model_diffusive_ref_flux_at_q[istate], model_diffusive_flux_divergence,
-        //                                                 flux_basis.oneD_vol_operator,
-        //                                                 flux_basis.oneD_grad_operator);
-        // }        
+        if(do_vms) {
+            //Reference divergence of the reference filtered model diffusive flux.
+            flux_basis.divergence_matrix_vector_mult_1D(filtered_model_diffusive_ref_flux_at_q[istate], filtered_model_diffusive_flux_divergence,
+                                                        flux_basis.oneD_vol_operator,
+                                                        flux_basis.oneD_grad_operator);
+        }        
 
         // Strong form
         // The right-hand side sends all the term to the side of the source term
@@ -1463,15 +1465,16 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             soln_basis.inner_product_1D(conv_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, false, -1.0);
         }
 
-        // Diffusive -- note: this is where we would implemented the basis partitioning needed for the full DG-VMS approach
+        // Diffusive
         // Note that for diffusion, the negative is defined in the physics. Since we used the auxiliary
         // variable, put a negative here.
         soln_basis.inner_product_1D(diffusive_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, true, -1.0);
 
+        // -- note: this is where we would implemented the basis partitioning needed for the full DG-VMS approach
         // however, it would be better to do something like this:
-        // if(do_vms) {
-        // soln_basis.inner_product_1D(model_diffusive_flux_divergence, vol_quad_weights, rhs, projected_and_truncated_soln_basis.oneD_vol_operator, true, -1.0);
-        // }
+        if(do_vms) {
+            soln_basis.inner_product_1D(filtered_model_diffusive_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, true, -1.0);
+        }
 
         // Manufactured source
         if(this->all_parameters->manufactured_convergence_study_param.manufactured_solution_param.use_manufactured_source_term) {
