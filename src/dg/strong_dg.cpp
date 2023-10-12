@@ -1289,7 +1289,6 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         if(do_vms) filtered_model_diffusive_phys_flux = this->pde_model_double->dissipative_flux(filtered_soln_state, filtered_aux_soln_state, current_cell_index);
         // NOTE: This is where I access the filtered stored filtered_model_diffusive_phys_flux
 
-
         // Manufactured source
         std::array<real,nstate> manufactured_source;
         if(this->all_parameters->manufactured_convergence_study_param.manufactured_solution_param.use_manufactured_source_term) {
@@ -1465,7 +1464,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             soln_basis.inner_product_1D(conv_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, false, -1.0);
         }
 
-        // Diffusive
+        // Diffusive -- note: this is where we would implemented the basis partitioning needed for the full DG-VMS approach
         // Note that for diffusion, the negative is defined in the physics. Since we used the auxiliary
         // variable, put a negative here.
         soln_basis.inner_product_1D(diffusive_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, true, -1.0);
@@ -2141,6 +2140,18 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_boundary_term_strong(
             filtered_soln_state, soln_boundary,
             filtered_aux_soln_state, grad_soln_boundary,
             unit_phys_normal_int, penalty, true, boundary_id);
+
+        // Model Dissipative numerical flux -- WARNING: Not so sure about this part here... would have to have like 2 diss num flux objects;
+        // one for the actual physics above, and one for the model terms
+        // std::array<real,nstate> model_diss_auxi_num_flux_dot_n_at_q;
+        // model_diss_auxi_num_flux_dot_n_at_q = this->diss_num_flux_double->evaluate_auxiliary_flux(
+        //     current_cell_index, current_cell_index,
+        //     0.0, 0.0,
+        //     soln_state, soln_boundary,
+        //     aux_soln_state, grad_soln_boundary,
+        //     filtered_soln_state, soln_boundary,
+        //     filtered_aux_soln_state, grad_soln_boundary,
+        //     unit_phys_normal_int, penalty, true);
 
         // Model Dissipative numerical flux -- WARNING: Not so sure about this part here... would have to have like 2 diss num flux objects;
         // one for the actual physics above, and one for the model terms
