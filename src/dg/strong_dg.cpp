@@ -1246,7 +1246,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 aux_soln_state[istate][idim] = aux_soln_at_q[istate][idim][iquad];
                 if(this->do_compute_filtered_solution) filtered_aux_soln_state[istate][idim] = legendre_aux_soln_at_q[istate][idim][iquad];
             }
-            //extract the filtered dissipative flux
+            //extract the dissipative flux
             for(int idim=0; idim<dim; idim++){
                 diffusive_phys_flux[istate][idim] = diffusive_phys_flux_at_q[istate][idim][iquad];
                 /*if(this->do_filter_dissipative_flux)*/ 
@@ -1274,7 +1274,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
                 entropy_var[istate] = projected_entropy_var_at_q[istate][iquad];
             }
             soln_state = this->pde_physics_double->compute_conservative_variables_from_entropy_variables (entropy_var);
-            // TO DO: confirm that this is what should be passed to dissipative_flux below
+            // TO DO: confirm that this is what should be passed to dissipative_flux below -- ASK ALEX
             
             //loop over all the non-zero entries for "sum-factorized" Hadamard product that corresponds to the iquad.
             for(unsigned int row_index = iquad * n_quad_pts_1D, column_index = 0; 
