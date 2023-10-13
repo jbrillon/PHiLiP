@@ -35,6 +35,7 @@ public:
     const bool apply_modal_high_pass_filter_on_filtered_solution; ///< Flag to apply modal high pass filter on the filtered solution
     const unsigned int poly_degree_max_large_scales; ///< For filtered solution; lower bound of high pass filter
     const bool do_filter_dissipative_flux; ///< Flag to filter the dissipative flux
+    const bool do_vms; ///< Flag to do the variational multi-scale approach
 
     /// Assembles the auxiliary equations' residuals and solves for the auxiliary variables.
     /** For information regarding auxiliary vs. primary quations, see 

@@ -31,6 +31,7 @@ DGStrong<dim,nstate,real,MeshType>::DGStrong(
     , apply_modal_high_pass_filter_on_filtered_solution(this->all_parameters->physics_model_param.apply_modal_high_pass_filter_on_filtered_solution)
     , poly_degree_max_large_scales(this->all_parameters->physics_model_param.poly_degree_max_large_scales)
     , do_filter_dissipative_flux(this->all_parameters->physics_model_param.do_filter_dissipative_flux)
+    , do_vms(this->do_filter_dissipative_flux)
 { }
 
 // Destructor
