@@ -1573,6 +1573,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         // -- note: this is where we would implemented the basis partitioning needed for the full DG-VMS approach
         // however, it would be better to do something like this:
         // i should simply compute model_diffusive_flux_divergence then manually filter it here
+        // if doing the change of basis and truncation, would pass projected_and_truncated_soln_basis.oneD_vol_operator as the 3rd last arg
         if(do_vms) {
             soln_basis.inner_product_1D(filtered_model_diffusive_flux_divergence, vol_quad_weights, rhs, soln_basis.oneD_vol_operator, true, -1.0);
         }
