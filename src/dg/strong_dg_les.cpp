@@ -354,12 +354,12 @@ void DGStrongLES_ShearImproved<dim,nstate,real,MeshType>::update_cellwise_mean_q
             // -- Constructor for tensor product polynomials based on Polynomials::Legendre interpolation. 
             dealii::FE_DGQLegendre<1,1> legendre_poly_1D(poly_degree);
             // -- Projection operator for legendre basis
-            OPERATOR::vol_projection_operator<dim,2*dim> legendre_soln_basis_projection_oper(1, poly_degree, this->max_grid_degree);
+            OPERATOR::vol_projection_operator<dim,2*dim> legendre_soln_basis_projection_oper(1, poly_degree, grid_degree);
             legendre_soln_basis_projection_oper.build_1D_volume_operator(legendre_poly_1D, quad_extra_1D);
             // -- Legendre basis functions 
-            OPERATOR::basis_functions<dim,2*dim> legendre_soln_basis(1, poly_degree, this->max_grid_degree);
-            legendre_soln_basis.build_1D_volume_operator(legendre_poly_1D, quad_extra_1D);//TO DO: confirm
-            legendre_soln_basis.build_1D_gradient_operator(legendre_poly_1D, quad_extra_1D);//TO DO: confirm
+            OPERATOR::basis_functions<dim,2*dim> legendre_soln_basis(1, poly_degree, grid_degree);
+            legendre_soln_basis.build_1D_volume_operator(legendre_poly_1D, quad_extra_1D);
+            legendre_soln_basis.build_1D_gradient_operator(legendre_poly_1D, quad_extra_1D);
             for(int istate=0; istate<nstate; istate++){
                 //==================================================
                 // Solution and Solution Gradient
@@ -388,7 +388,7 @@ void DGStrongLES_ShearImproved<dim,nstate,real,MeshType>::update_cellwise_mean_q
                     primitive_legendre_aux_soln_at_q[istate][idim].resize(n_quad_pts);
                 }
                 // Apply gradient of reference basis functions on the solution at volume cubature nodes.
-                legendre_soln_basis.gradient_matrix_vector_mult_1D(legendre_soln_coeff[istate], ref_gradient_basis_fns_times_soln,
+                legendre_soln_basis.gradient_matrix_vector_mult_1D(legendre_soln_coeff, ref_gradient_basis_fns_times_soln,
                                                                    legendre_soln_basis.oneD_vol_operator,
                                                                    legendre_soln_basis.oneD_grad_operator);
                 // Transform the reference gradient into a physical gradient operator.
