@@ -112,8 +112,8 @@ std::array<dealii::Tensor<1,dim,real2>,nstate> LargeEddySimulationBase<dim,nstat
     const dealii::types::global_dof_index cell_index) const
 {   
     // Step 1,2: Primitive solution and Gradient of primitive solution
-    const std::array<dealii::Tensor<1,dim,real2>,nstate> primitive_soln_gradient = this->navier_stokes_physics->convert_conservative_gradient_to_primitive_gradient(conservative_soln, solution_gradient);
-    const std::array<real2,nstate> primitive_soln = this->navier_stokes_physics->convert_conservative_to_primitive(conservative_soln); // from Euler
+    const std::array<dealii::Tensor<1,dim,real2>,nstate> primitive_soln_gradient = this->navier_stokes_physics->convert_conservative_gradient_to_primitive_gradient_templated(conservative_soln, solution_gradient);
+    const std::array<real2,nstate> primitive_soln = this->navier_stokes_physics->convert_conservative_to_primitive_templated(conservative_soln); // from Euler
 
     // Step 3: Viscous stress tensor, Velocities, Heat flux
     const dealii::Tensor<1,dim,real2> vel = this->navier_stokes_physics->extract_velocities_from_primitive(primitive_soln); // from Euler
@@ -138,6 +138,65 @@ std::array<dealii::Tensor<1,dim,real2>,nstate> LargeEddySimulationBase<dim,nstat
         = this->navier_stokes_physics->dissipative_flux_given_velocities_viscous_stress_tensor_and_heat_flux(vel,viscous_stress_tensor,heat_flux);
     
     return viscous_flux;
+}
+//----------------------------------------------------------------
+template <int dim, int nstate, typename real>
+std::array<real,nstate> LargeEddySimulationBase<dim,nstate,real>
+::dissipative_flux_dot_normal (
+        const std::array<real,nstate> &solution,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &solution_gradient,
+        const std::array<real,nstate> &/*filtered_solution*/,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &/*filtered_solution_gradient*/,
+        const bool on_boundary,
+        const dealii::types::global_dof_index cell_index,
+        const dealii::Tensor<1,dim,real> &normal,
+        const int boundary_type) const
+{
+    std::array<dealii::Tensor<1,dim,real>,nstate> dissipative_flux;
+    std::array<real,nstate> dissipative_flux_dot_normal;
+    dissipative_flux_dot_normal.fill(0.0); // initialize
+    // Associated thermal boundary condition
+    if((on_boundary && (navier_stokes_physics->thermal_boundary_condition_type == thermal_boundary_condition_enum::adiabatic))
+        && ((boundary_type == 1001) || (boundary_type == 1006))) { 
+
+        /** If adiabatic on either slip (1001) or no-slip (1006) wall BCs */
+        // adiabatic boundary
+        // --> Modify viscous flux such that normal_vector dot gradient of temperature must be zero
+
+        // REFERENCES:
+        /* (1) Masatsuka 2018 "I do like CFD", p.148, eq.(4.12.1-4.12.4)
+         * (2) For the boundary condition case, refer to the equation above equation 458 of the following paper:
+         *  Hartmann, Ralf. "Numerical analysis of higher order discontinuous Galerkin finite element methods." (2008): 1-107.
+         */
+
+        // Step 1,2: Primitive solution and Gradient of primitive solution
+        const std::array<dealii::Tensor<1,dim,real>,nstate> primitive_soln_gradient = this->navier_stokes_physics->convert_conservative_gradient_to_primitive_gradient_templated(solution, solution_gradient);
+        const std::array<real,nstate> primitive_soln = this->navier_stokes_physics->convert_conservative_to_primitive_templated(solution); // from Euler
+
+        // Step 3: Viscous stress tensor, Velocities, Heat flux
+        const dealii::Tensor<1,dim,real> vel = this->navier_stokes_physics->extract_velocities_from_primitive(primitive_soln); // from Euler
+        dealii::Tensor<2,dim,real> viscous_stress_tensor = compute_SGS_stress_tensor(primitive_soln, primitive_soln_gradient,cell_index);
+        dealii::Tensor<1,dim,real> heat_flux;
+        for (int flux_dim=0; flux_dim<dim; ++flux_dim) {
+            // set the heat flux to zero since we want the normal dot gradient of temperature to be zero for an adiabatic boundary
+            heat_flux[flux_dim] = 0.0;
+        }
+        // Step 4: Construct viscous flux; Note: sign corresponds to LHS
+        dissipative_flux = this->navier_stokes_physics->dissipative_flux_given_velocities_viscous_stress_tensor_and_heat_flux(vel,viscous_stress_tensor,heat_flux);
+    } else {
+        // if not on boundary and for all other types of boundary conditions (including isothermal) --> no change to dissipative flux
+        // no change to dissipative flux for BCs that do not impose a condition on the gradient at the boundary
+        dissipative_flux = dissipative_flux_templated<real>(solution,solution_gradient,cell_index);
+    }
+
+    // compute the dot product with the normal vector
+    for (int s=0; s<nstate; s++) {
+        for (int d=0; d<dim; ++d) {
+            dissipative_flux_dot_normal[s] += dissipative_flux[s][d] * normal[d];//compute dot product
+        }
+    }
+
+    return dissipative_flux_dot_normal;
 }
 //----------------------------------------------------------------
 template <int dim, int nstate, typename real>
@@ -210,7 +269,7 @@ std::array<real,nstate> LargeEddySimulationBase<dim,nstate,real>
 
     // Get nondimensional (w.r.t. freestream) bulk velocity
     // const real density = conservative_soln[0];
-    const std::array<real,nstate> primitive_soln = this->navier_stokes_physics->convert_conservative_to_primitive(conservative_soln);
+    const std::array<real,nstate> primitive_soln = this->navier_stokes_physics->convert_conservative_to_primitive_templated(conservative_soln);
     // const real viscosity_coefficient = this->navier_stokes_physics->compute_viscosity_coefficient(primitive_soln);
     // const real bulk_velocity = viscosity_coefficient*(this->channel_bulk_velocity_reynolds_number)/(density*this->half_channel_height*this->navier_stokes_physics->reynolds_number_inf);
     const real bulk_velocity = 1.0; // since we nondimensionalize w.r.t. freestream values, which are set at the bulk values, this value is simply 1.0
@@ -1010,14 +1069,173 @@ real2 LargeEddySimulation_ShearImprovedSmagorinsky<dim,nstate,real>
     const real2 model_constant_times_filter_width = this->get_model_constant_times_filter_width(cell_index);
     // Get magnitude of strain_rate_tensor
     const real2 strain_rate_tensor_magnitude = this->template get_tensor_magnitude<real2>(strain_rate_tensor);
-    // Get magnitude of mean_strain_rate_tensor
-    const real2 mean_strain_rate_tensor_magnitude = this->template get_tensor_magnitude<double>(this->mean_strain_rate_tensor);
     // Compute the eddy viscosity; Eq.(14) in reference 1 with modification by Eq.(2.4) in reference 2
     const real2 eddy_viscosity = model_constant_times_filter_width*model_constant_times_filter_width*(
-                                    strain_rate_tensor_magnitude - mean_strain_rate_tensor_magnitude);
+                                    strain_rate_tensor_magnitude - this->cellwise_mean_strain_rate_tensor_magnitude[cell_index]);
 
     return eddy_viscosity;
 }
+//----------------------------------------------------------------
+//================================================================
+// Variational multiscale (VMS) eddy viscosity model
+//================================================================
+template <int dim, int nstate, typename real>
+LargeEddySimulation_VMS<dim, nstate, real>::LargeEddySimulation_VMS(
+    const double                                              ref_length,
+    const double                                              gamma_gas,
+    const double                                              mach_inf,
+    const double                                              angle_of_attack,
+    const double                                              side_slip_angle,
+    const double                                              prandtl_number,
+    const double                                              reynolds_number_inf,
+    const bool                                                use_constant_viscosity,
+    const double                                              constant_viscosity,
+    const double                                              temperature_inf,
+    const double                                              turbulent_prandtl_number,
+    const double                                              ratio_of_filter_width_to_cell_size,
+    const double                                              model_constant,
+    const unsigned int                                        poly_degree,
+    const unsigned int                                        poly_degree_large_scales,
+    const double                                              mesh_size,
+    const double                                              curve_fit_constant,
+    const double                                              isothermal_wall_temperature,
+    const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
+    std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function,
+    const two_point_num_flux_enum                             two_point_num_flux_type)
+    : LargeEddySimulation_Smagorinsky<dim,nstate,real>(ref_length,
+                                                       gamma_gas,
+                                                       mach_inf,
+                                                       angle_of_attack,
+                                                       side_slip_angle,
+                                                       prandtl_number,
+                                                       reynolds_number_inf,
+                                                       use_constant_viscosity,
+                                                       constant_viscosity,
+                                                       temperature_inf,
+                                                       turbulent_prandtl_number,
+                                                       ratio_of_filter_width_to_cell_size,
+                                                       model_constant,
+                                                       isothermal_wall_temperature,
+                                                       thermal_boundary_condition_type,
+                                                       manufactured_solution_function,
+                                                       two_point_num_flux_type)
+    , poly_degree((double)poly_degree)
+    , poly_degree_large_scales((double)poly_degree_large_scales)
+    , mesh_size(mesh_size)
+    , curve_fit_constant(curve_fit_constant)
+{ }
+//----------------------------------------------------------------
+template <int dim, int nstate, typename real>
+double LargeEddySimulation_VMS<dim,nstate,real>
+::get_model_constant_times_filter_width (
+    const dealii::types::global_dof_index /*cell_index*/) const
+{
+    // Smagorinsky constant for a given DG discretization; equation 8 in reference
+    const double discontinuous_galerkin_smagorinsky_model_constant = 0.172*mesh_size/poly_degree;
+
+    // Model constant times filter width; equations 18 and 14 in reference
+    double model_constant_times_filter_width = 1.0 - pow(curve_fit_constant*(poly_degree_large_scales/poly_degree), 4.0/3.0);
+    model_constant_times_filter_width = pow(model_constant_times_filter_width, -3.0/4.0);
+    model_constant_times_filter_width *= discontinuous_galerkin_smagorinsky_model_constant;
+
+    return model_constant_times_filter_width;
+}
+//----------------------------------------------------------------
+//================================================================
+// Small-Small Variational multiscale (VMS) eddy viscosity model
+//================================================================
+template <int dim, int nstate, typename real>
+LargeEddySimulation_SmallSmallVMS<dim, nstate, real>::LargeEddySimulation_SmallSmallVMS(
+    const double                                              ref_length,
+    const double                                              gamma_gas,
+    const double                                              mach_inf,
+    const double                                              angle_of_attack,
+    const double                                              side_slip_angle,
+    const double                                              prandtl_number,
+    const double                                              reynolds_number_inf,
+    const bool                                                use_constant_viscosity,
+    const double                                              constant_viscosity,
+    const double                                              temperature_inf,
+    const double                                              turbulent_prandtl_number,
+    const double                                              ratio_of_filter_width_to_cell_size,
+    const double                                              model_constant,
+    const unsigned int                                        poly_degree,
+    const unsigned int                                        poly_degree_large_scales,
+    const double                                              mesh_size,
+    const double                                              isothermal_wall_temperature,
+    const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
+    std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function,
+    const two_point_num_flux_enum                             two_point_num_flux_type)
+    : LargeEddySimulation_VMS<dim,nstate,real>(ref_length,
+                                               gamma_gas,
+                                               mach_inf,
+                                               angle_of_attack,
+                                               side_slip_angle,
+                                               prandtl_number,
+                                               reynolds_number_inf,
+                                               use_constant_viscosity,
+                                               constant_viscosity,
+                                               temperature_inf,
+                                               turbulent_prandtl_number,
+                                               ratio_of_filter_width_to_cell_size,
+                                               model_constant,
+                                               poly_degree,
+                                               poly_degree_large_scales,
+                                               mesh_size,
+                                               1.174, // Equation 18 in reference
+                                               isothermal_wall_temperature,
+                                               thermal_boundary_condition_type,
+                                               manufactured_solution_function,
+                                               two_point_num_flux_type)
+{ }
+//----------------------------------------------------------------
+//================================================================
+// All-All Variational multiscale (VMS) eddy viscosity model
+//================================================================
+template <int dim, int nstate, typename real>
+LargeEddySimulation_AllAllVMS<dim, nstate, real>::LargeEddySimulation_AllAllVMS(
+    const double                                              ref_length,
+    const double                                              gamma_gas,
+    const double                                              mach_inf,
+    const double                                              angle_of_attack,
+    const double                                              side_slip_angle,
+    const double                                              prandtl_number,
+    const double                                              reynolds_number_inf,
+    const bool                                                use_constant_viscosity,
+    const double                                              constant_viscosity,
+    const double                                              temperature_inf,
+    const double                                              turbulent_prandtl_number,
+    const double                                              ratio_of_filter_width_to_cell_size,
+    const double                                              model_constant,
+    const unsigned int                                        poly_degree,
+    const unsigned int                                        poly_degree_large_scales,
+    const double                                              mesh_size,
+    const double                                              isothermal_wall_temperature,
+    const thermal_boundary_condition_enum                     thermal_boundary_condition_type,
+    std::shared_ptr< ManufacturedSolutionFunction<dim,real> > manufactured_solution_function,
+    const two_point_num_flux_enum                             two_point_num_flux_type)
+    : LargeEddySimulation_VMS<dim,nstate,real>(ref_length,
+                                               gamma_gas,
+                                               mach_inf,
+                                               angle_of_attack,
+                                               side_slip_angle,
+                                               prandtl_number,
+                                               reynolds_number_inf,
+                                               use_constant_viscosity,
+                                               constant_viscosity,
+                                               temperature_inf,
+                                               turbulent_prandtl_number,
+                                               ratio_of_filter_width_to_cell_size,
+                                               model_constant,
+                                               poly_degree,
+                                               poly_degree_large_scales,
+                                               mesh_size,
+                                               1.082, // Equation 14 in reference
+                                               isothermal_wall_temperature,
+                                               thermal_boundary_condition_type,
+                                               manufactured_solution_function,
+                                               two_point_num_flux_type)
+{ }
 //----------------------------------------------------------------
 //----------------------------------------------------------------
 //----------------------------------------------------------------
@@ -1052,6 +1270,24 @@ template class LargeEddySimulation_ShearImprovedSmagorinsky < PHILIP_DIM, PHILIP
 template class LargeEddySimulation_ShearImprovedSmagorinsky < PHILIP_DIM, PHILIP_DIM+2, RadType  >;
 template class LargeEddySimulation_ShearImprovedSmagorinsky < PHILIP_DIM, PHILIP_DIM+2, FadFadType >;
 template class LargeEddySimulation_ShearImprovedSmagorinsky < PHILIP_DIM, PHILIP_DIM+2, RadFadType >;
+// -- LargeEddySimulation_VMS
+template class LargeEddySimulation_VMS < PHILIP_DIM, PHILIP_DIM+2, double >;
+template class LargeEddySimulation_VMS < PHILIP_DIM, PHILIP_DIM+2, FadType  >;
+template class LargeEddySimulation_VMS < PHILIP_DIM, PHILIP_DIM+2, RadType  >;
+template class LargeEddySimulation_VMS < PHILIP_DIM, PHILIP_DIM+2, FadFadType >;
+template class LargeEddySimulation_VMS < PHILIP_DIM, PHILIP_DIM+2, RadFadType >;
+// -- LargeEddySimulation_SmallSmallVMS
+template class LargeEddySimulation_SmallSmallVMS < PHILIP_DIM, PHILIP_DIM+2, double >;
+template class LargeEddySimulation_SmallSmallVMS < PHILIP_DIM, PHILIP_DIM+2, FadType  >;
+template class LargeEddySimulation_SmallSmallVMS < PHILIP_DIM, PHILIP_DIM+2, RadType  >;
+template class LargeEddySimulation_SmallSmallVMS < PHILIP_DIM, PHILIP_DIM+2, FadFadType >;
+template class LargeEddySimulation_SmallSmallVMS < PHILIP_DIM, PHILIP_DIM+2, RadFadType >;
+// -- LargeEddySimulation_AllAllVMS
+template class LargeEddySimulation_AllAllVMS < PHILIP_DIM, PHILIP_DIM+2, double >;
+template class LargeEddySimulation_AllAllVMS < PHILIP_DIM, PHILIP_DIM+2, FadType  >;
+template class LargeEddySimulation_AllAllVMS < PHILIP_DIM, PHILIP_DIM+2, RadType  >;
+template class LargeEddySimulation_AllAllVMS < PHILIP_DIM, PHILIP_DIM+2, FadFadType >;
+template class LargeEddySimulation_AllAllVMS < PHILIP_DIM, PHILIP_DIM+2, RadFadType >;
 //-------------------------------------------------------------------------------------
 // Templated members used by derived classes, defined in respective parent classes
 //-------------------------------------------------------------------------------------

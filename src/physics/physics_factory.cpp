@@ -129,7 +129,7 @@ PhysicsFactory<dim,nstate,real>
                 manufactured_solution_function,
                 parameters_input->two_point_num_flux_type);
         }
-    } else if (pde_type == PDE_enum::physics_model) {
+    } else if (pde_type == PDE_enum::physics_model || pde_type == PDE_enum::physics_model_filtered) {
         if constexpr (nstate>=dim+2) {
             return create_Physics_Model(parameters_input,
                                         manufactured_solution_function,
@@ -154,6 +154,7 @@ PhysicsFactory<dim,nstate,real>
                        std::shared_ptr< ModelBase<dim,nstate,real> >             model_input)
 {
     using PDE_enum = Parameters::AllParameters::PartialDifferentialEquation;
+    const PDE_enum pde_type = parameters_input->pde_type;
 
     using Model_enum = Parameters::AllParameters::ModelType;
     const Model_enum model_type = parameters_input->model_type;
@@ -200,13 +201,23 @@ PhysicsFactory<dim,nstate,real>
             }
 
             // Create the physics model object in physics
-            return std::make_shared < PhysicsModel<dim,nstate,real,nstate_baseline_physics> > (
+            if (pde_type == PDE_enum::physics_model) {
+                return std::make_shared < PhysicsModel<dim,nstate,real,nstate_baseline_physics> > (
                     parameters_input,
                     baseline_physics_type,
                     model_input,
                     manufactured_solution_function,
                     has_nonzero_diffusion,
                     has_nonzero_physical_source);
+            } else if(pde_type == PDE_enum::physics_model_filtered) {
+                return std::make_shared < PhysicsModelFiltered<dim,nstate,real,nstate_baseline_physics> > (
+                    parameters_input,
+                    baseline_physics_type,
+                    model_input,
+                    manufactured_solution_function,
+                    has_nonzero_diffusion,
+                    has_nonzero_physical_source);
+            }
         }
         else {
             // LES does not exist for nstate!=(dim+2) || dim!=3

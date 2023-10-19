@@ -21,6 +21,7 @@ protected:
     */
     using PhysicsBase<dim,nstate,real>::dissipative_flux;
     using PhysicsBase<dim,nstate,real>::source_term;
+    using PhysicsBase<dim,nstate,real>::boundary_face_values;
 public:
     using thermal_boundary_condition_enum = Parameters::NavierStokesParam::ThermalBoundaryCondition;
     using two_point_num_flux_enum = Parameters::AllParameters::TwoPointNumericalFlux;
@@ -70,13 +71,6 @@ protected:
 public:
     /// Destructor
     ~NavierStokes() {};
-
-    /** Obtain gradient of primitive variables from gradient of conservative variables */
-    template<typename real2>
-    std::array<dealii::Tensor<1,dim,real2>,nstate> 
-    convert_conservative_gradient_to_primitive_gradient (
-        const std::array<real2,nstate> &conservative_soln,
-        const std::array<dealii::Tensor<1,dim,real2>,nstate> &conservative_soln_gradient) const;
 
     /** Nondimensionalized temperature gradient */
     template<typename real2>
@@ -219,8 +213,15 @@ public:
     /** Nondimensionalized strain rate tensor, S*, from conservative solution and solution gradient
      *  Reference: Masatsuka 2018 "I do like CFD", p.148, extracted from eq.(4.14.12)
      */
+    dealii::Tensor<2,dim,real> compute_strain_rate_tensor_from_conservative (
+        const std::array<real,nstate> &conservative_soln,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
+
+    /** Nondimensionalized strain rate tensor, S*, from conservative solution and solution gradient
+     *  Reference: Masatsuka 2018 "I do like CFD", p.148, extracted from eq.(4.14.12)
+     */
     template<typename real2>
-    dealii::Tensor<2,dim,real2> compute_strain_rate_tensor_from_conservative (
+    dealii::Tensor<2,dim,real2> compute_strain_rate_tensor_from_conservative_templated (
         const std::array<real2,nstate> &conservative_soln,
         const std::array<dealii::Tensor<1,dim,real2>,nstate> &conservative_soln_gradient) const;
 
@@ -285,6 +286,22 @@ public:
     compute_viscous_stress_tensor (
         const std::array<real2,nstate> &primitive_soln,
         const std::array<dealii::Tensor<1,dim,real2>,nstate> &primitive_soln_gradient) const;
+
+    /** Nondimensionalized viscous flux (i.e. dissipative flux) dot normal vector that accounts for gradient boundary conditions
+     *  References: 
+     *  (1) Masatsuka 2018 "I do like CFD", p.142, eq.(4.12.1-4.12.4),
+     *  (2) For the boundary condition case, refer to the equation above equation 458 of the following paper:
+     *      Hartmann, Ralf. "Numerical analysis of higher order discontinuous Galerkin finite element methods." (2008): 1-107.
+     */
+    std::array<real,nstate> dissipative_flux_dot_normal (
+        const std::array<real,nstate> &solution,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &solution_gradient,
+        const std::array<real,nstate> &filtered_solution,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &filtered_solution_gradient,
+        const bool on_boundary,
+        const dealii::types::global_dof_index cell_index,
+        const dealii::Tensor<1,dim,real> &normal,
+        const int boundary_type) const override;
 
     /** Nondimensionalized viscous flux (i.e. dissipative flux)
      *  Reference: Masatsuka 2018 "I do like CFD", p.142, eq.(4.12.1-4.12.4)
@@ -401,9 +418,12 @@ public:
     /// For post processing purposes (update comment later)
     dealii::UpdateFlags post_get_needed_update_flags () const override;
 
-private:
+public:
     /// Returns the square of the magnitude of the tensor (i.e. the double dot product of a tensor with itself)
     real get_tensor_magnitude_sqr (const dealii::Tensor<2,dim,real> &tensor) const;
+
+    /// Returns the the magnitude of the tensor (i.e. the double dot product of a tensor with itself)
+    real get_tensor_magnitude (const dealii::Tensor<2,dim,real> &tensor) const;
 
 };
 

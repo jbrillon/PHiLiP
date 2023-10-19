@@ -31,6 +31,10 @@ public:
     /// Destructor
     ~DGStrong();
 
+    const bool do_compute_filtered_solution; ///< Flag to compute the filtered solution
+    const bool apply_modal_high_pass_filter_on_filtered_solution; ///< Flag to apply modal high pass filter on the filtered solution
+    const unsigned int poly_degree_max_large_scales; ///< For filtered solution; lower bound of high pass filter
+
     /// Assembles the auxiliary equations' residuals and solves for the auxiliary variables.
     /** For information regarding auxiliary vs. primary quations, see 
      *  Quaegebeur, Nadarajah, Navah and Zwanenburg 2019: Stability of Energy Stable Flux 

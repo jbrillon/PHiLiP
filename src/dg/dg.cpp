@@ -469,8 +469,7 @@ void DGBaseState<dim,nstate,real,MeshType>::set_constant_model_variables(
 template <int dim, int nstate, typename real, typename MeshType>
 void DGBaseState<dim,nstate,real,MeshType>::set_unsteady_model_variables(
         const double bulk_density,
-        const double time_step,
-        const dealii::Tensor<2,dim,double> &mean_strain_rate_tensor)
+        const double time_step)
 {
     // bulk_density
     pde_model_double->bulk_density  = bulk_density;
@@ -485,13 +484,6 @@ void DGBaseState<dim,nstate,real,MeshType>::set_unsteady_model_variables(
     pde_model_rad->time_step     = time_step;
     pde_model_fad_fad->time_step = time_step;
     pde_model_rad_fad->time_step = time_step;
-
-    // mean_strain_rate_tensor
-    pde_model_double->mean_strain_rate_tensor  = mean_strain_rate_tensor;
-    pde_model_fad->mean_strain_rate_tensor     = mean_strain_rate_tensor;
-    pde_model_rad->mean_strain_rate_tensor     = mean_strain_rate_tensor;
-    pde_model_fad_fad->mean_strain_rate_tensor = mean_strain_rate_tensor;
-    pde_model_rad_fad->mean_strain_rate_tensor = mean_strain_rate_tensor;
 }
 
 template <int dim, int nstate, typename real, typename MeshType>
@@ -1378,7 +1370,7 @@ void DGBase<dim,real,MeshType>::reinit_operators_for_cell_residual_loop(
 
     //basis functions projection operator
     soln_basis_projection_oper_int.build_1D_volume_operator(oneD_fe_collection_1state[poly_degree_int], oneD_quadrature_collection[poly_degree_int]);
-    soln_basis_projection_oper_ext.build_1D_volume_operator(oneD_fe_collection_1state[poly_degree_int], oneD_quadrature_collection[poly_degree_int]);
+    soln_basis_projection_oper_ext.build_1D_volume_operator(oneD_fe_collection_1state[poly_degree_ext], oneD_quadrature_collection[poly_degree_ext]);
 
     //We only need to compute the most recent mapping basis since we compute interior before looping faces
     mapping_basis.build_1D_shape_functions_at_grid_nodes(high_order_grid->oneD_fe_system, high_order_grid->oneD_grid_nodes);
@@ -1533,13 +1525,14 @@ void DGBase<dim,real,MeshType>::assemble_residual (const bool compute_dRdW, cons
 
 
     int assembly_error = 0;
-    try {
+    // try {
 
         // update artificial dissipation discontinuity sensor only if using artificial dissipation
         if(all_parameters->artificial_dissipation_param.add_artificial_dissipation) update_artificial_dissipation_discontinuity_sensor();
         
         // updates model variables only if there is a model
-        if(all_parameters->pde_type == Parameters::AllParameters::PartialDifferentialEquation::physics_model) update_model_variables();
+        if(all_parameters->pde_type == Parameters::AllParameters::PartialDifferentialEquation::physics_model ||
+           all_parameters->pde_type == Parameters::AllParameters::PartialDifferentialEquation::physics_model_filtered) update_model_variables();
 
         // assembles and solves for auxiliary variable if necessary.
         assemble_auxiliary_residual();
@@ -1592,9 +1585,9 @@ void DGBase<dim,real,MeshType>::assemble_residual (const bool compute_dRdW, cons
             timer.stop();
             assemble_residual_time += timer.cpu_time();
         }
-    } catch(...) {
-        assembly_error = 1;
-    }
+    // } catch(...) {
+    //     assembly_error = 1;
+    // }
     const int mpi_assembly_error = dealii::Utilities::MPI::sum(assembly_error, mpi_communicator);
 
 
@@ -2252,7 +2245,8 @@ void DGBase<dim,real,MeshType>::allocate_system (
     cell_volume.reinit(triangulation->n_active_cells());
 
     // allocates model variables only if there is a model
-    if(all_parameters->pde_type == Parameters::AllParameters::PartialDifferentialEquation::physics_model) allocate_model_variables();
+    if(all_parameters->pde_type == Parameters::AllParameters::PartialDifferentialEquation::physics_model ||
+       all_parameters->pde_type == Parameters::AllParameters::PartialDifferentialEquation::physics_model_filtered) allocate_model_variables();
 
     solution.reinit(locally_owned_dofs, ghost_dofs, mpi_communicator);
     solution *= 0.0;

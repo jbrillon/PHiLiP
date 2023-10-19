@@ -821,7 +821,9 @@ void DGWeak<dim,nstate,real,MeshType>::assemble_boundary_term_explicit(
             artificial_diss_coeff,
             soln_int[iquad], soln_ext[iquad],
             soln_grad_int[iquad], soln_grad_ext[iquad],
-            normal_int, penalty, true);
+            soln_int[iquad], soln_ext[iquad],
+            soln_grad_int[iquad], soln_grad_ext[iquad],
+            normal_int, penalty, true, boundary_id);
     }
 
     for (unsigned int itest=0; itest<n_soln_dofs_int; ++itest) {
@@ -1002,7 +1004,9 @@ void DGWeak<dim,nstate,real,MeshType>::assemble_face_term_explicit(
             artificial_diss_coeff_ext,
             soln_int[iquad], soln_ext[iquad],
             soln_grad_int[iquad], soln_grad_ext[iquad],
-            normal_int, penalty);
+            soln_int[iquad], soln_ext[iquad],
+            soln_grad_int[iquad], soln_grad_ext[iquad],
+            normal_int, penalty, false);
     }
 
     // From test functions associated with interior cell point of view
@@ -1493,7 +1497,9 @@ void DGWeak<dim,nstate,real,MeshType>::assemble_boundary_term(
             artificial_diss_coeff_at_q[iquad],
             soln_int[iquad], soln_ext[iquad],
             soln_grad_int[iquad], soln_grad_ext[iquad],
-            normal_int, penalty, true);
+            soln_int[iquad], soln_ext[iquad],
+            soln_grad_int[iquad], soln_grad_ext[iquad],
+            normal_int, penalty, true, boundary_id);
     }
 
     // Applying convection boundary condition
@@ -2527,7 +2533,9 @@ void DGWeak<dim,nstate,real,MeshType>::assemble_face_term(
             artificial_diss_coeff_at_q[iquad],
             soln_int[iquad], soln_ext[iquad],
             soln_grad_int[iquad], soln_grad_ext[iquad],
-            phys_unit_normal_int[iquad], penalty);
+            soln_int[iquad], soln_ext[iquad],
+            soln_grad_int[iquad], soln_grad_ext[iquad],
+            phys_unit_normal_int[iquad], penalty, false);
 
         // From test functions associated with interior cell point of view
         for (unsigned int itest_int=0; itest_int<n_soln_dofs_int; ++itest_int) {

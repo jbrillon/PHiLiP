@@ -75,6 +75,24 @@ std::array<dealii::Tensor<1,dim,real>,nstate> NavierStokesWithModelSourceTerms<d
 //----------------------------------------------------------------
 template <int dim, int nstate, typename real>
 std::array<real,nstate> NavierStokesWithModelSourceTerms<dim,nstate,real>
+::dissipative_flux_dot_normal (
+        const std::array<real,nstate> &/*solution*/,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &/*solution_gradient*/,
+        const std::array<real,nstate> &/*filtered_solution*/,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &/*filtered_solution_gradient*/,
+        const bool /*on_boundary*/,
+        const dealii::types::global_dof_index /*cell_index*/,
+        const dealii::Tensor<1,dim,real> &/*normal*/,
+        const int /*boundary_type*/) const
+{
+    std::array<real,nstate> dissipative_flux_dot_normal;
+    dissipative_flux_dot_normal.fill(0.0); // initialize
+
+    return dissipative_flux_dot_normal;
+}
+//----------------------------------------------------------------
+template <int dim, int nstate, typename real>
+std::array<real,nstate> NavierStokesWithModelSourceTerms<dim,nstate,real>
 ::convective_eigenvalues (
     const std::array<real,nstate> &/*conservative_soln*/,
     const dealii::Tensor<1,dim,real> &/*normal*/) const
@@ -134,7 +152,7 @@ std::array<real,nstate> NavierStokesWithModelSourceTerms<dim,nstate,real>
     std::fill(source_term.begin(), source_term.end(), 0.0);
 
     // Get nondimensional (w.r.t. freestream) bulk velocity
-    const std::array<real,nstate> primitive_soln = this->navier_stokes_physics->convert_conservative_to_primitive(conservative_soln);
+    const std::array<real,nstate> primitive_soln = this->navier_stokes_physics->convert_conservative_to_primitive_templated(conservative_soln);
     const real density = conservative_soln[0];
     const real viscosity_coefficient = this->navier_stokes_physics->compute_viscosity_coefficient(primitive_soln);
     const real bulk_velocity = viscosity_coefficient*(this->channel_bulk_velocity_reynolds_number)/(density*this->half_channel_height*this->navier_stokes_physics->reynolds_number_inf);
