@@ -145,6 +145,9 @@ protected:
     /// Array for storing the integrated quantities; done for computational efficiency
     std::array<double,NUMBER_OF_INTEGRATED_QUANTITIES> integrated_quantities;
 
+    /// Array for storing the integrated quantities based on the low order solution; done for computational efficiency
+    std::array<double,NUMBER_OF_INTEGRATED_QUANTITIES> integrated_quantities_low_order_solution;
+
     /// Integrated kinetic energy over the domain at previous time step; used for ensuring a physically consistent simulation
     double integrated_kinetic_energy_at_previous_time_step;
 
