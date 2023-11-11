@@ -34,6 +34,7 @@ public:
     const bool do_compute_filtered_solution; ///< Flag to compute the filtered solution
     const bool apply_modal_high_pass_filter_on_filtered_solution; ///< Flag to apply modal high pass filter on the filtered solution
     const unsigned int poly_degree_max_large_scales; ///< For filtered solution; lower bound of high pass filter
+    const unsigned int low_poly_degree; ///< Polynomial degree of the low order solutions
 
     /// Assembles the auxiliary equations' residuals and solves for the auxiliary variables.
     /** For information regarding auxiliary vs. primary quations, see 
@@ -305,6 +306,9 @@ protected:
         OPERATOR::metric_operators<real,dim,2*dim>         &metric_oper_ext,
         dealii::Vector<real>                               &local_rhs_int_cell,
         dealii::Vector<real>                               &local_rhs_ext_cell);
+
+    /// Updates the low order solution for a given low polynomial degree
+    void update_low_order_solution() override;
 
 protected:
     /// Evaluate the integral over the cell volume and the specified derivatives.
