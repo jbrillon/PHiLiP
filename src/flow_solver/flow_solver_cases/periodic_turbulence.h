@@ -27,21 +27,21 @@ public:
     /** Computes the integrated quantities over the domain simultaneously and updates the array storing them
      *  Note: For efficiency, this also simultaneously updates the local maximum wave speed
      * */
-    void compute_and_update_integrated_quantities(DGBase<dim, double> &dg);
+    void compute_and_update_integrated_quantities(DGBase<dim, double> &dg, const bool based_on_low_order_solution=false);
 
     /** Gets the nondimensional integrated kinetic energy given a DG object from dg->solution
      *  -- Reference: Cox, Christopher, et al. "Accuracy, stability, and performance comparison 
      *                between the spectral difference and flux reconstruction schemes." 
      *                Computers & Fluids 221 (2021): 104922.
      * */
-    double get_integrated_kinetic_energy() const;
+    double get_integrated_kinetic_energy(const bool based_on_low_order_solution=false) const;
 
     /** Gets the nondimensional integrated enstrophy given a DG object from dg->solution
      *  -- Reference: Cox, Christopher, et al. "Accuracy, stability, and performance comparison 
      *                between the spectral difference and flux reconstruction schemes." 
      *                Computers & Fluids 221 (2021): 104922.
      * */
-    double get_integrated_enstrophy() const;
+    double get_integrated_enstrophy(const bool based_on_low_order_solution=false) const;
 
     /** Gets non-dimensional theoretical vorticity tensor based dissipation rate 
      *  Note: For incompressible flows or when dilatation effects are negligible 
@@ -49,34 +49,35 @@ public:
      *                between the spectral difference and flux reconstruction schemes." 
      *                Computers & Fluids 221 (2021): 104922.
      * */
-    double get_vorticity_based_dissipation_rate() const;
+    double get_vorticity_based_dissipation_rate(const bool based_on_low_order_solution=false) const;
 
     /** Evaluate non-dimensional theoretical pressure-dilatation dissipation rate
      *  -- Reference: Cox, Christopher, et al. "Accuracy, stability, and performance comparison 
      *                between the spectral difference and flux reconstruction schemes." 
      *                Computers & Fluids 221 (2021): 104922.
      * */
-    double get_pressure_dilatation_based_dissipation_rate () const;
+    double get_pressure_dilatation_based_dissipation_rate (const bool based_on_low_order_solution=false) const;
 
     /** Gets non-dimensional theoretical deviatoric strain-rate tensor based dissipation rate 
      *  -- Reference: Cox, Christopher, et al. "Accuracy, stability, and performance comparison 
      *                between the spectral difference and flux reconstruction schemes." 
      *                Computers & Fluids 221 (2021): 104922.
      * */
-    double get_deviatoric_strain_rate_tensor_based_dissipation_rate() const;
+    double get_deviatoric_strain_rate_tensor_based_dissipation_rate(const bool based_on_low_order_solution=false) const;
 
     /** Gets non-dimensional theoretical strain-rate tensor based dissipation rate from integrated
      *  strain-rate tensor magnitude squared.
      *  -- Reference: Navah, Farshad, et al. "A High-Order Variational Multiscale Approach 
      *                to Turbulence for Compact Nodal Schemes." 
      * */
-    double get_strain_rate_tensor_based_dissipation_rate() const;
+    double get_strain_rate_tensor_based_dissipation_rate(const bool based_on_low_order_solution=false) const;
 
     /// Output the velocity field to file
     void output_velocity_field(
             std::shared_ptr<DGBase<dim,double>> dg,
             const unsigned int output_file_index,
-            const double current_time) const;
+            const double current_time,
+            const bool based_on_low_order_solution=false) const;
 
     /// Calculate numerical entropy by matrix-vector product
     double get_numerical_entropy(const std::shared_ptr <DGBase<dim, double>> dg) const;
@@ -84,6 +85,9 @@ public:
 protected:
     /// Filename (with extension) for the unsteady data table
     const std::string unsteady_data_table_filename_with_extension;
+
+    /// Filename (with extension) for the unsteady data based on low order solution table
+    const std::string unsteady_data_table_low_order_solution_filename_with_extension;
 
     /// Number of times to output the velocity field
     const unsigned int number_of_times_to_output_velocity_field;
@@ -131,7 +135,8 @@ public:
             const unsigned int current_iteration,
             const double current_time,
             const std::shared_ptr <DGBase<dim, double>> dg,
-            const std::shared_ptr<dealii::TableHandler> unsteady_data_table) override;
+            const std::shared_ptr<dealii::TableHandler> unsteady_data_table,
+            const bool based_on_low_order_solution=false) override;
 
 protected:
     /// List of possible integrated quantities over the domain

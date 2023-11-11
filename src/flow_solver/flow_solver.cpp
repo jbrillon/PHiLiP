@@ -40,6 +40,7 @@ FlowSolver<dim, nstate>::FlowSolver(
 , number_of_fixed_times_to_output_solution(ode_param.number_of_fixed_times_to_output_solution)
 , output_solution_at_exact_fixed_times(ode_param.output_solution_at_exact_fixed_times)
 , do_compute_unsteady_data_and_write_to_table(flow_solver_param.do_compute_unsteady_data_and_write_to_table)
+, do_compute_low_order_solution(flow_solver_param.do_compute_low_order_solution)
 , dg(DGFactory<dim,double>::create_discontinuous_galerkin(&all_param, poly_degree, flow_solver_param.max_poly_degree_for_adaptation, grid_degree, flow_solver_case->generate_grid()))
 {
     flow_solver_case->set_higher_order_grid(dg);
@@ -93,6 +94,7 @@ FlowSolver<dim, nstate>::FlowSolver(
         SetInitialCondition<dim,nstate,double>::set_initial_condition(flow_solver_case->initial_condition_function, dg, &all_param);
     }
     dg->solution.update_ghost_values();
+    if(do_compute_low_order_solution) dg->update_low_order_solution();
     
     // Allocate ODE solver after initializing DG
     ode_solver->allocate_ode_system();
@@ -342,7 +344,8 @@ template <int dim, int nstate>
 void FlowSolver<dim,nstate>::output_restart_files(
     const unsigned int current_restart_index,
     const double time_step_input,
-    const std::shared_ptr <dealii::TableHandler> unsteady_data_table) const
+    const std::shared_ptr <dealii::TableHandler> unsteady_data_table,
+    const std::shared_ptr <dealii::TableHandler> unsteady_data_table_low_order_solution) const
 {
     pcout << "  ... Writing restart files ... " << std::endl;
     const std::string restart_filename_without_extension = get_restart_filename_without_extension(current_restart_index);
@@ -359,6 +362,11 @@ void FlowSolver<dim,nstate>::output_restart_files(
         std::string restart_unsteady_data_table_filename = flow_solver_param.unsteady_data_table_filename+std::string("-")+restart_filename_without_extension+std::string(".txt");
         std::ofstream unsteady_data_table_file(flow_solver_param.restart_files_directory_name + std::string("/") + restart_unsteady_data_table_filename);
         unsteady_data_table->write_text(unsteady_data_table_file);
+        if(do_compute_low_order_solution) {
+            std::string restart_unsteady_data_table_filename = flow_solver_param.unsteady_data_table_filename+std::string("_low_order_solution")+std::string("-")+restart_filename_without_extension+std::string(".txt");
+            std::ofstream unsteady_data_table_file(flow_solver_param.restart_files_directory_name + std::string("/") + restart_unsteady_data_table_filename);
+            unsteady_data_table_low_order_solution->write_text(unsteady_data_table_file);
+        }
     }
 
     // parameter file; written last to ensure necessary data/solution files have been written before
@@ -476,18 +484,31 @@ int FlowSolver<dim,nstate>::run() const
         // dealii::TableHandler and data at initial time
         //----------------------------------------------------
         std::shared_ptr<dealii::TableHandler> unsteady_data_table = std::make_shared<dealii::TableHandler>();
+        std::shared_ptr<dealii::TableHandler> unsteady_data_table_low_order_solution = std::make_shared<dealii::TableHandler>();
         if(flow_solver_param.restart_computation_from_file == true) {
             pcout << "Initializing data table from corresponding restart file... " << std::flush;
             const std::string restart_filename_without_extension = get_restart_filename_without_extension(flow_solver_param.restart_file_index);
             const std::string restart_unsteady_data_table_filename = flow_solver_param.unsteady_data_table_filename+std::string("-")+restart_filename_without_extension+std::string(".txt");
             initialize_data_table_from_file(flow_solver_param.restart_files_directory_name + std::string("/") + restart_unsteady_data_table_filename,unsteady_data_table);
             pcout << "done." << std::endl;
+            if(do_compute_low_order_solution) {
+                pcout << "Initializing data table for low order solution from corresponding restart file... " << std::flush;
+                const std::string restart_filename_without_extension = get_restart_filename_without_extension(flow_solver_param.restart_file_index);
+                const std::string restart_unsteady_data_table_filename = flow_solver_param.unsteady_data_table_filename+std::string("_low_order_solution")+std::string("-")+restart_filename_without_extension+std::string(".txt");
+                initialize_data_table_from_file(flow_solver_param.restart_files_directory_name + std::string("/") + restart_unsteady_data_table_filename,unsteady_data_table_low_order_solution);
+                pcout << "done." << std::endl;
+            }
         } else {
             // no restart:
             if(do_compute_unsteady_data_and_write_to_table){
                 pcout << "Writing unsteady data computed at initial time... " << std::endl;
                 flow_solver_case->compute_unsteady_data_and_write_to_table(ode_solver->current_iteration, ode_solver->current_time, dg, unsteady_data_table);
                 pcout << "done." << std::endl;
+                if(do_compute_low_order_solution) {
+                    pcout << "Writing unsteady data for low order solution computed at initial time... " << std::endl;
+                    flow_solver_case->compute_unsteady_data_and_write_to_table(ode_solver->current_iteration, ode_solver->current_time, dg, unsteady_data_table_low_order_solution, true);
+                    pcout << "done." << std::endl;
+                }
             }
         }
         //----------------------------------------------------
@@ -525,8 +546,11 @@ int FlowSolver<dim,nstate>::run() const
             ode_solver->step_in_time(time_step,false); // pseudotime==false
 
             // Compute the unsteady quantities, write to the dealii table, and output to file
-            if(do_compute_unsteady_data_and_write_to_table){
-                flow_solver_case->compute_unsteady_data_and_write_to_table(ode_solver->current_iteration, ode_solver->current_time, dg, unsteady_data_table);
+            if(do_compute_unsteady_data_and_write_to_table) {
+                flow_solver_case->compute_unsteady_data_and_write_to_table(ode_solver->current_iteration, ode_solver->current_time, dg, unsteady_data_table, false);
+                if(do_compute_low_order_solution) {
+                    flow_solver_case->compute_unsteady_data_and_write_to_table(ode_solver->current_iteration, ode_solver->current_time, dg, unsteady_data_table_low_order_solution, true);
+                }
             }
             // update next time step
             if(flow_solver_param.adaptive_time_step == true) {
@@ -543,7 +567,7 @@ int FlowSolver<dim,nstate>::run() const
                                                  ((ode_solver->current_time + next_time_step) > current_desired_time_for_output_restart_files_every_dt_time_intervals)) 
                                                 || (ode_solver->current_time > current_desired_time_for_output_restart_files_every_dt_time_intervals);
                     if (is_output_time) {
-                        output_restart_files(current_restart_file_number, next_time_step, unsteady_data_table);
+                        output_restart_files(current_restart_file_number, next_time_step, unsteady_data_table, unsteady_data_table_low_order_solution);
                         current_desired_time_for_output_restart_files_every_dt_time_intervals += flow_solver_param.output_restart_files_every_dt_time_intervals;
                         current_restart_file_number += 1;
                     }
@@ -551,7 +575,7 @@ int FlowSolver<dim,nstate>::run() const
                     const bool is_output_iteration = (ode_solver->current_iteration % flow_solver_param.output_restart_files_every_x_steps == 0);
                     if (is_output_iteration) {
                         const unsigned int file_number = ode_solver->current_iteration / flow_solver_param.output_restart_files_every_x_steps;
-                        output_restart_files(file_number, next_time_step, unsteady_data_table);
+                        output_restart_files(file_number, next_time_step, unsteady_data_table, unsteady_data_table_low_order_solution);
                     }
                 }
             }

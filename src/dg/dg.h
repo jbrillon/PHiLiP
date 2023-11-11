@@ -109,6 +109,7 @@ public:
     const unsigned int max_grid_degree;
 
     const bool do_compute_low_order_solution; ///< Flag to compute the low order solution
+    const unsigned int low_poly_degree; ///< Polynomial degree of the low order solutions
 
     /// Principal constructor that will call delegated constructor.
     /** Will initialize mapping, fe_dg, all_parameters, volume_quadrature, and face_quadrature

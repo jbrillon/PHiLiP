@@ -89,6 +89,7 @@ DGBase<dim,real,MeshType>::DGBase(
     , max_degree(max_degree_input)
     , max_grid_degree(grid_degree_input)
     , do_compute_low_order_solution(parameters_input->flow_solver_param.do_compute_low_order_solution)
+    , low_poly_degree(parameters_input->flow_solver_param.poly_degree_of_low_order_solution)
     , triangulation(triangulation_input)
     , fe_collection(std::get<0>(collection_tuple))
     , volume_quadrature_collection(std::get<1>(collection_tuple))

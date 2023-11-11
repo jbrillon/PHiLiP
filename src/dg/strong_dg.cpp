@@ -30,7 +30,6 @@ DGStrong<dim,nstate,real,MeshType>::DGStrong(
     , do_compute_filtered_solution(this->all_parameters->physics_model_param.do_compute_filtered_solution)
     , apply_modal_high_pass_filter_on_filtered_solution(this->all_parameters->physics_model_param.apply_modal_high_pass_filter_on_filtered_solution)
     , poly_degree_max_large_scales(this->all_parameters->physics_model_param.poly_degree_max_large_scales)
-    , low_poly_degree(this->all_parameters->flow_solver_param.poly_degree_of_low_order_solution)
 { }
 
 // Destructor
@@ -3407,7 +3406,7 @@ void DGStrong<dim,nstate,real,MeshType>::update_low_order_solution()
             }
         }
     }
-    this->low_order_solution.update_ghost_values();
+    // this->low_order_solution.update_ghost_values(); // <-- Not necessary
 }
 
 
