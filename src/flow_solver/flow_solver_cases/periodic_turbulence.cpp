@@ -854,8 +854,8 @@ void PeriodicTurbulence<dim, nstate>::compute_unsteady_data_and_write_to_table(
         if(is_output_time) {
             // Output velocity field for current index
             this->output_velocity_field(dg, this->index_of_current_desired_time_to_output_velocity_field, current_time, based_on_low_order_solution);
-            if((!flow_solver_param.do_compute_low_order_solution && !based_on_low_order_solution) or
-                (flow_solver_param.do_compute_low_order_solution && based_on_low_order_solution)) {
+            if((!this->all_param.flow_solver_param.do_compute_low_order_solution && !based_on_low_order_solution) or
+                (this->all_param.flow_solver_param.do_compute_low_order_solution && based_on_low_order_solution)) {
                 /* If not computing low order solution update the index. However,
                    if we are in fact computing the low order solution, update the index 
                    when this function is called with based_on_low_order_solution==true 
