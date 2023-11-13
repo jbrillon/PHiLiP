@@ -451,8 +451,9 @@ void PeriodicTurbulence<dim, nstate>::compute_and_update_integrated_quantities(D
     const bool store_surf_flux_nodes = false;//currently doesn't need the surface physical nodal position
 
     const unsigned int n_dofs = dg.fe_collection[poly_degree].n_dofs_per_cell();
+    const unsigned int n_dofs_max = dg.fe_collection[dg.max_degree].n_dofs_per_cell();
     const unsigned int n_shape_fns = n_dofs / nstate;
-    std::vector<dealii::types::global_dof_index> dofs_indices (n_dofs);
+    std::vector<dealii::types::global_dof_index> dofs_indices (n_dofs_max);
     auto metric_cell = dg.high_order_grid->dof_handler_grid.begin_active();
     // Changed for loop to update metric_cell.
     for (auto cell = dg.dof_handler.begin_active(); cell!= dg.dof_handler.end(); ++cell, ++metric_cell) {
