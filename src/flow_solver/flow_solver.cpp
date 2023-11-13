@@ -502,7 +502,7 @@ int FlowSolver<dim,nstate>::run() const
             // no restart:
             if(do_compute_unsteady_data_and_write_to_table){
                 pcout << "Writing unsteady data computed at initial time... " << std::endl;
-                flow_solver_case->compute_unsteady_data_and_write_to_table(ode_solver->current_iteration, ode_solver->current_time, dg, unsteady_data_table);
+                flow_solver_case->compute_unsteady_data_and_write_to_table(ode_solver->current_iteration, ode_solver->current_time, dg, unsteady_data_table, false);
                 pcout << "done." << std::endl;
                 if(do_compute_low_order_solution) {
                     pcout << "Writing unsteady data for low order solution computed at initial time... " << std::endl;
