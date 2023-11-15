@@ -229,6 +229,8 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     const unsigned int max_dofs_per_cell = dg->dof_handler.get_fe_collection().max_dofs_per_cell();
     std::vector<dealii::types::global_dof_index> current_dofs_indices(max_dofs_per_cell);
     auto metric_cell = dg->high_order_grid->dof_handler_grid.begin_active();
+    // will need to update this 
+    // const unsigned int n_dofs_max = dg.fe_collection[dg.max_degree].n_dofs_per_cell();
     for (auto current_cell = dg->dof_handler.begin_active(); current_cell!=dg->dof_handler.end(); ++current_cell, ++metric_cell) {
         if (!current_cell->is_locally_owned()) continue;
     
