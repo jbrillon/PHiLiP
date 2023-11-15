@@ -52,7 +52,7 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
 
         prm.declare_entry("do_compute_low_order_solution", "false",
                           dealii::Patterns::Bool(),
-                          "Flag to compute the low order solution. False by default (i.e. unsteady by default).");
+                          "Flag to compute the low order solution. False by default.");
 
         prm.declare_entry("poly_degree_of_low_order_solution", "1",
                           dealii::Patterns::Integer(0, dealii::Patterns::Integer::max_int_value),
