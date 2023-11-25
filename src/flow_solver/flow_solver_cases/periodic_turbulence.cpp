@@ -226,11 +226,9 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     mapping_basis_at_equidistant.build_1D_shape_functions_at_grid_nodes(dg->high_order_grid->oneD_fe_system, dg->high_order_grid->oneD_grid_nodes);
     mapping_basis_at_equidistant.build_1D_shape_functions_at_flux_nodes(dg->high_order_grid->oneD_fe_system, vol_quad_equidistant_1D, dg->oneD_face_quadrature);
 
-    const unsigned int max_dofs_per_cell = dg->dof_handler.get_fe_collection().max_dofs_per_cell();
+    const unsigned int max_dofs_per_cell = dg->fe_collection[dg->max_degree].n_dofs_per_cell();
     std::vector<dealii::types::global_dof_index> current_dofs_indices(max_dofs_per_cell);
     auto metric_cell = dg->high_order_grid->dof_handler_grid.begin_active();
-    // will need to update this 
-    // const unsigned int n_dofs_max = dg.fe_collection[dg.max_degree].n_dofs_per_cell();
     for (auto current_cell = dg->dof_handler.begin_active(); current_cell!=dg->dof_handler.end(); ++current_cell, ++metric_cell) {
         if (!current_cell->is_locally_owned()) continue;
     
@@ -269,8 +267,9 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
             mapping_basis_at_equidistant,
             dg->all_parameters->use_invariant_curl_form);
         
-        current_dofs_indices.resize(n_dofs_cell);
-        current_cell->get_dof_indices (current_dofs_indices);
+        // current_dofs_indices.resize(n_dofs_cell); // TO DO why is this needed but not in compute unsteady integrated quantities
+        // may need to add this to compute unsteady integrated quantities but maybe not since we just filled the low order one with zeros
+        current_cell->get_dof_indices(current_dofs_indices);
 
         std::array<std::vector<double>,nstate> soln_coeff;
         for(unsigned int idof=0; idof<n_dofs_cell; idof++){
