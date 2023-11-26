@@ -162,14 +162,14 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     else this->pcout << "  ... Writting velocity field ... " << std::flush;
     
     // (0) Set the output file directory name
-    std::string output_flow_field_files_directory_name_;
-    if(based_on_low_order_solution) output_flow_field_files_directory_name_ = output_flow_field_files_directory_name;
-    else output_flow_field_files_directory_name_ = output_flow_field_files_directory_name + std::string("_low_order_solution"); 
+    std::string output_flow_field_files_directory_name_ = output_flow_field_files_directory_name;
 
     // NOTE: Same loop from read_values_from_file_and_project() in set_initial_condition.cpp
     
     // Get filename prefix based on output file index and the flow field quantity filename prefix
-    const std::string filename_prefix = flow_field_quantity_filename_prefix + std::string("-") + std::to_string(output_file_index);
+    std::string filename_prefix = flow_field_quantity_filename_prefix;
+    if(based_on_low_order_solution) filename_prefix += std::string("_low_order_solution");
+    filename_prefix += std::string("-") + std::to_string(output_file_index);
 
     // (1) Get filename based on MPI rank
     //-------------------------------------------------------------
