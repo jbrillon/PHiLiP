@@ -198,8 +198,10 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     }
 
     // build a basis oneD on equidistant nodes in 1D
-    dealii::Quadrature<1> vol_quad_equidistant_1D = dealii::QIterated<1>(dealii::QTrapez<1>(),dg->max_degree);
-    dealii::FE_DGQArbitraryNodes<1,1> equidistant_finite_element(vol_quad_equidistant_1D);
+    const unsigned int higher_poly_degree = 2*dg->max_degree+1;
+    dealii::Quadrature<1> vol_quad_equidistant_1D = dealii::QIterated<1>(dealii::QTrapez<1>(),higher_poly_degree); // set to 2p+1 or something -- check paper
+    // dealii::FE_DGQArbitraryNodes<1,1> equidistant_finite_element(vol_quad_equidistant_1D); -- unused
+    const unsigned int n_quad_pts = pow(vol_quad_equidistant_1D.size(),dim);
 
     const unsigned int init_grid_degree = dg->high_order_grid->fe_system.tensor_degree();
     OPERATOR::basis_functions<dim,2*dim> soln_basis(1, dg->max_degree, init_grid_degree); 
@@ -221,7 +223,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
         const unsigned int poly_degree = i_fele;
         const unsigned int n_dofs_cell = dg->fe_collection[poly_degree].dofs_per_cell;
         const unsigned int n_shape_fns = n_dofs_cell / nstate;
-        const unsigned int n_quad_pts = n_shape_fns;
+        // const unsigned int n_quad_pts = n_shape_fns;
 
         // We first need to extract the mapping support points (grid nodes) from high_order_grid.
         const dealii::FESystem<dim> &fe_metric = dg->high_order_grid->fe_system;
