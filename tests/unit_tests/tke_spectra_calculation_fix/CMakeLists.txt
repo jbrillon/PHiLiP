@@ -18,7 +18,9 @@ foreach(dim RANGE 3 3)
     # Library dependency
     set(ParameterLib ParametersLibrary)
     string(CONCAT PhysicsLib Physics_${dim}D)
+    string(CONCAT FlowSolverLib FlowSolver_${dim}D)
     target_link_libraries(${TEST_TARGET} ${ParameterLib})
+    target_link_libraries(${TEST_TARGET} ${FlowSolverLib})
     target_link_libraries(${TEST_TARGET} ${PhysicsLib})
     target_link_libraries(${TEST_TARGET} m mpi)
     # Setup target with deal.II
@@ -34,6 +36,7 @@ foreach(dim RANGE 3 3)
 
     unset(TEST_TARGET)
     unset(ParametersLib)
+    unset(FlowSolverLib)
     unset(PhysicsLib)
 
 endforeach()

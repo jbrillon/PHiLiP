@@ -6,6 +6,9 @@
 #include "parameters/all_parameters.h"
 #include "physics/navier_stokes.h"
 #include "physics/initial_conditions/set_initial_condition.h"
+#include "flow_solver/flow_solver.h"
+#include "flow_solver/flow_solver_factory.h"
+#include "flow_solver/flow_solver_cases/periodic_turbulence.h"
 #include <iostream>
 
 const double TOLERANCE = 1E-12;
@@ -45,10 +48,18 @@ int main (int argc, char * argv[])
     // const int max_nstate = 5;
 
     // if(all_parameters.run_type == PHiLiP::Parameters::AllParameters::RunType::flow_simulation) {
-    //     std::unique_ptr<PHiLiP::FlowSolver::FlowSolverBase> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<max_dim,max_nstate>::create_flow_solver(&all_parameters,parameter_handler);
-    //     run_error = flow_solver->run();
-    //     pcout << "Flow simulation complete with run error code: " << run_error << std::endl;
+    std::unique_ptr<PHiLiP::FlowSolver::FlowSolver<dim,nstate>> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::select_flow_case(&all_parameters, parameter_handler);
+        // std::unique_ptr<PHiLiP::FlowSolver::FlowSolverBase> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::create_flow_solver(&all_parameters,parameter_handler);
+        // run_error = flow_solver->run();
+        // pcout << "Flow simulation complete with run error code: " << run_error << std::endl;
     // }
+    // static_cast<void>(flow_solver->run());
+    // Compute kinetic energy and theoretical dissipation rate
+    std::unique_ptr<PHiLiP::FlowSolver::PeriodicTurbulence<dim, nstate>> flow_solver_case = std::make_unique<PHiLiP::FlowSolver::PeriodicTurbulence<dim,nstate>>(&all_parameters);
+    flow_solver_case->compute_and_update_integrated_quantities(*(flow_solver->dg));
+    const double kinetic_energy_computed = flow_solver_case->get_integrated_kinetic_energy();
+    pcout << "KE INTEGRATED = " << kinetic_energy_computed << std::endl;
+    // const double theoretical_dissipation_rate_computed = flow_solver_case->get_vorticity_based_dissipation_rate();
 
     // const std::string input_filename_prefix = parameters_input->flow_solver_param.input_flow_setup_filename_prefix;
     // pcout << "reading values from file prefix  " << input_filename_prefix << " and projecting... " << std::flush;
