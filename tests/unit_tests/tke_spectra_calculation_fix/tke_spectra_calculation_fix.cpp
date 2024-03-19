@@ -46,7 +46,7 @@ int main (int argc, char * argv[])
     const std::string input_filename_prefix = "/media/julien/Samsung_T5/NarvalFiles/2023_JCP/robustness/viscous_TGV_ILES_NSFR_cDG_IR_2PF_GL_OI-0_dofs048_p5_procs64/setup_files/setup";
     // const std::string input_filename_prefix = parameters_input->flow_solver_param.input_flow_setup_filename_prefix;
     pcout << "reading values from file prefix: \n " << input_filename_prefix << " \n and projecting... " << std::flush;
-    SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
+    PHiLiP::SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
     pcout << "done." << std::endl;
 
     // create the PeriodicTurbulence object
