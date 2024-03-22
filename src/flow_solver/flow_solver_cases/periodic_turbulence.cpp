@@ -188,17 +188,19 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     //-------------------------------------------------------------
     std::ofstream FILE (filename);
     
+    const unsigned int higher_poly_degree = 2*dg->max_degree+1;
+    
     // check that the file is open and write DOFs
     if (!FILE.is_open()) {
         this->pcout << "ERROR: Cannot open file " << filename << std::endl;
         std::abort();
     } else if(this->mpi_rank==0) {
-        const unsigned int number_of_degrees_of_freedom_per_state = dg->dof_handler.n_dofs()/nstate;
+        // const unsigned int number_of_degrees_of_freedom_per_state = dg->dof_handler.n_dofs()/nstate;
+        const unsigned int number_of_degrees_of_freedom_per_state = pow(this->number_of_cells_per_direction*(higher_poly_degree+1),dim);
         FILE << number_of_degrees_of_freedom_per_state << std::string("\n");
     }
 
     // build a basis oneD on equidistant nodes in 1D
-    const unsigned int higher_poly_degree = 2*dg->max_degree+1;
     dealii::Quadrature<1> vol_quad_equidistant_1D = dealii::QIterated<1>(dealii::QTrapez<1>(),higher_poly_degree); // set to 2p+1 or something -- check paper
     // dealii::FE_DGQArbitraryNodes<1,1> equidistant_finite_element(vol_quad_equidistant_1D); -- unused
     const unsigned int n_quad_pts = pow(vol_quad_equidistant_1D.size(),dim);
