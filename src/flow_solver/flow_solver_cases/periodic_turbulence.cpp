@@ -188,7 +188,8 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     //-------------------------------------------------------------
     std::ofstream FILE (filename);
     
-    const unsigned int higher_poly_degree = 2*dg->max_degree+1;
+    const unsigned int n_subdivisions = 4;
+    const unsigned int higher_poly_degree = n_subdivisions*(dg->max_degree+1)-1; // -1 so that n_quad_pts in 1D is n_subdiv*(P+1)
     
     // check that the file is open and write DOFs
     if (!FILE.is_open()) {
