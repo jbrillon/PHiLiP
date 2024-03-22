@@ -30,6 +30,7 @@ PeriodicTurbulence<dim, nstate>::PeriodicTurbulence(const PHiLiP::Parameters::Al
         , output_vorticity_magnitude_field_in_addition_to_velocity(this->all_param.flow_solver_param.output_vorticity_magnitude_field_in_addition_to_velocity)
         , output_flow_field_files_directory_name(this->all_param.flow_solver_param.output_flow_field_files_directory_name)
         , output_solution_at_exact_fixed_times(this->all_param.ode_solver_param.output_solution_at_exact_fixed_times)
+        , output_velocity_number_of_subvisions(this->all_param.flow_solver_param.output_velocity_number_of_subvisions)
 {
     // Get the flow case type
     using FlowCaseEnum = Parameters::FlowSolverParam::FlowCaseType;
@@ -188,8 +189,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     //-------------------------------------------------------------
     std::ofstream FILE (filename);
     
-    const unsigned int n_subdivisions = 4;
-    const unsigned int higher_poly_degree = n_subdivisions*(dg->max_degree+1)-1; // -1 so that n_quad_pts in 1D is n_subdiv*(P+1)
+    const unsigned int higher_poly_degree = this->output_velocity_number_of_subvisions*(dg->max_degree+1)-1; // -1 so that n_quad_pts in 1D is n_subdiv*(P+1)
     
     // check that the file is open and write DOFs
     if (!FILE.is_open()) {
