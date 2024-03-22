@@ -323,7 +323,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
             }
         }
         // write out all values at equidistant nodes
-        for(unsigned int ishape=0; ishape<n_shape_fns; ishape++){
+        for(unsigned int ishape=0; ishape<n_quad_pts; ishape++){
             dealii::Point<dim,double> vol_equid_node;
             // write coordinates
             for(int idim=0; idim<dim; idim++) {
