@@ -55,10 +55,10 @@ int main (int argc, char * argv[])
 
     // create the PeriodicTurbulence object
     std::unique_ptr<PHiLiP::FlowSolver::PeriodicTurbulence<dim, nstate>> periodic_turbulence = std::make_unique<PHiLiP::FlowSolver::PeriodicTurbulence<dim,nstate>>(&all_parameters);
-    periodic_turbulence->output_velocity_field(flow_solver->dg,0,8.0);
+    // periodic_turbulence->output_velocity_field(flow_solver->dg,0,8.0);
 
     // do it again for the next outputted velocity field
-    // periodic_turbulence->output_velocity_field(flow_solver->dg,1,9.0);
+    periodic_turbulence->output_velocity_field(flow_solver->dg,1,9.0);
     // const std::string input_filename_prefix = "/media/julien/Samsung_T5/NarvalFiles/2023_JCP/robustness/viscous_TGV_ILES_NSFR_cDG_IR_2PF_GL_OI-0_dofs048_p5_procs64/setup_files/setup";
     // pcout << "reading values from file prefix: \n " << input_filename_prefix << " \n and projecting... " << std::flush;
     // SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
