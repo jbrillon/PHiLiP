@@ -237,7 +237,6 @@ public:
     /** Only update the solution at the output points.
      */
     virtual dealii::UpdateFlags post_get_needed_update_flags () const;
-    
 protected:
     /// ConditionalOStream.
     /** Used as std::cout, but only prints if mpi_rank == 0
