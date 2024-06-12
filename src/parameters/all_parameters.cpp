@@ -236,6 +236,7 @@ void AllParameters::declare_parameters (dealii::ParameterHandler &prm)
                       " euler |"
                       " mhd |"
                       " navier_stokes |"
+                      " navier_stokes_channel_flow_constant_source_term | "
                       " physics_model_filtered |"
                       " physics_model"),
                       "The PDE we want to solve. "
@@ -250,6 +251,7 @@ void AllParameters::declare_parameters (dealii::ParameterHandler &prm)
                       "  euler | "
                       "  mhd |"
                       "  navier_stokes |"
+                      "  navier_stokes_channel_flow_constant_source_term | "
                       "  physics_model_filtered |"
                       "  physics_model>.");
 
@@ -426,6 +428,10 @@ void AllParameters::parse_parameters (dealii::ParameterHandler &prm)
     else if (pde_string == "navier_stokes") {
         pde_type = navier_stokes;
         nstate = dimension+2;
+    }
+    else if (pde_string == "navier_stokes_channel_flow_constant_source_term") {
+        pde_type = navier_stokes_channel_flow_constant_source_term;
+        nstate = dimension+2; 
     }
     else if (pde_string == "physics_model") {
         pde_type = physics_model;
