@@ -28,6 +28,8 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                           " channel_flow | "
                           " isentropic_vortex | "
                           " kelvin_helmholtz_instability | "
+                          " dipole_wall_collision_normal | "
+                          " dipole_wall_collision_oblique | "
                           " non_periodic_cube_flow "),
                           "The type of flow we want to simulate. "
                           "Choices are "
@@ -44,6 +46,8 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                           " channel_flow | "
                           " isentropic_vortex | "
                           " kelvin_helmholtz_instability | "
+                          " dipole_wall_collision_normal | "
+                          " dipole_wall_collision_oblique | "
                           " non_periodic_cube_flow>. ");
 
         prm.declare_entry("poly_degree", "1",
@@ -251,6 +255,17 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
         }
         prm.leave_subsection();
 
+        prm.enter_subsection("dipole_wall_collision");
+        {
+            prm.declare_entry("do_use_stretched_mesh", "false",
+                              dealii::Patterns::Bool(),
+                              "Flag to use stretched mesh. By default, false (i.e. use uniform mesh).");
+            prm.declare_entry("do_compute_angular_momentum", "false",
+                              dealii::Patterns::Bool(),
+                              "Flag to compute the angular momentum. By default, false.");
+        }
+        prm.leave_subsection();
+
         prm.enter_subsection("kelvin_helmholtz_instability");
         {
             prm.declare_entry("atwood_number", "0.5",
@@ -332,6 +347,10 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
         else if (flow_case_type_string == "kelvin_helmholtz_instability")   
                                                                         {flow_case_type = kelvin_helmholtz_instability;}
         else if (flow_case_type_string == "non_periodic_cube_flow")     {flow_case_type = non_periodic_cube_flow;}
+        else if (flow_case_type_string == "dipole_wall_collision_normal")     
+                                                                        {flow_case_type = dipole_wall_collision_normal;}
+        else if (flow_case_type_string == "dipole_wall_collision_oblique")
+                                                                        {flow_case_type = dipole_wall_collision_oblique;}
 
         poly_degree = prm.get_integer("poly_degree");
         
@@ -408,6 +427,13 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
             else if (xvelocity_initial_condition_type_string == "turbulent")    {xvelocity_initial_condition_type = turbulent;}
             else if (xvelocity_initial_condition_type_string == "manufactured") {xvelocity_initial_condition_type = manufactured;}
             relaxation_coefficient_for_turbulent_channel_flow_source_term = prm.get_double("relaxation_coefficient_for_turbulent_channel_flow_source_term");
+        }
+        prm.leave_subsection();
+
+        prm.enter_subsection("dipole_wall_collision");
+        {
+            do_use_stretched_mesh = prm.get_bool("do_use_stretched_mesh");
+            do_compute_angular_momentum = prm.get_bool("do_compute_angular_momentum");
         }
         prm.leave_subsection();
 

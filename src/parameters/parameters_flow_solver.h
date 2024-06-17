@@ -29,6 +29,8 @@ public:
         channel_flow,
         isentropic_vortex,
         kelvin_helmholtz_instability,
+        dipole_wall_collision_normal,
+        dipole_wall_collision_oblique,
         non_periodic_cube_flow
         };
     FlowCaseType flow_case_type; ///< Selected FlowCaseType from the input file
@@ -123,6 +125,12 @@ public:
     /// Selected DensityInitialConditionType from the input file
     TurbulentChannelMeshStretchingFunctionType turbulent_channel_mesh_stretching_function_type;
 
+    /// For dipole wall collision, flag to use stretched mesh
+    bool do_use_stretched_mesh;
+
+    /// For dipole wall collision, flag to compute angular momentum
+    bool do_compute_angular_momentum;
+    
     /// For KHI, the atwood number
     double atwood_number;
 
