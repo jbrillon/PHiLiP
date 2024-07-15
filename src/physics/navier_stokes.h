@@ -179,6 +179,14 @@ public:
         const std::array<real,nstate> &conservative_soln,
         const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
 
+    /** Evaluate second invariant (i.e. Q-criterion) from conservative variables and gradient of conservative variables
+     *  -- Reference: Jeong J, Hussain F. On the identification of a vortex. Journal of Fluid Mechanics. 1995;285:69-94. doi:10.1017/S0022112095000462 
+     *  -- Equation (2)
+     * */
+    real compute_second_invariant (
+        const std::array<real,nstate> &conservative_soln,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
+
     /// Evaluate enstrophy from conservative variables and gradient of conservative variables
     real compute_enstrophy (
         const std::array<real,nstate> &conservative_soln,
@@ -200,6 +208,18 @@ public:
      *                Computers & Fluids 221 (2021): 104922.
      * */
     real compute_pressure_dilatation (
+        const std::array<real,nstate> &conservative_soln,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
+
+    /** Evaluate dilatation from conservative variables and gradient of conservative variables 
+     * */
+    real compute_dilatation (
+        const std::array<real,nstate> &conservative_soln,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
+
+    /** Evaluate density gradient magnitude from conservative variables and gradient of conservative variables 
+     * */
+    real compute_density_gradient_magnitude (
         const std::array<real,nstate> &conservative_soln,
         const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
 
@@ -226,7 +246,7 @@ public:
         const std::array<dealii::Tensor<1,dim,real2>,nstate> &conservative_soln_gradient) const;
 
     /// Evaluate the square of the deviatoric strain-rate tensor magnitude (i.e. double dot product) from conservative variables and gradient of conservative variables
-    real compute_deviatoric_strain_rate_tensor_magnitude_sqr (
+    real compute_viscosity_times_deviatoric_strain_rate_tensor_magnitude_sqr (
         const std::array<real,nstate> &conservative_soln,
         const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
 
@@ -237,8 +257,8 @@ public:
      *                Computers & Fluids 221 (2021): 104922.
      *  -- Equation (57a) with free-stream nondimensionalization applied
      * */
-    real compute_deviatoric_strain_rate_tensor_based_dissipation_rate_from_integrated_deviatoric_strain_rate_tensor_magnitude_sqr (
-        const real integrated_deviatoric_strain_rate_tensor_magnitude_sqr) const;
+    real compute_deviatoric_strain_rate_tensor_based_dissipation_rate_from_integrated_viscosity_times_deviatoric_strain_rate_tensor_magnitude_sqr (
+        const real integrated_viscosity_times_deviatoric_strain_rate_tensor_magnitude_sqr) const;
 
     /** Extract gradient of velocities */
     template<typename real2>
@@ -255,7 +275,7 @@ public:
         const dealii::Tensor<2,dim,real2> &vel_gradient) const;
 
     /// Evaluate the square of the strain-rate tensor magnitude (i.e. double dot product) from conservative variables and gradient of conservative variables
-    real compute_strain_rate_tensor_magnitude_sqr (
+    real compute_viscosity_times_strain_rate_tensor_magnitude_sqr (
         const std::array<real,nstate> &conservative_soln,
         const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
 
@@ -265,9 +285,8 @@ public:
      *                to Turbulence for Compact Nodal Schemes." 
      *  -- Equation (E.9) with free-stream nondimensionalization applied
      * */
-    real compute_strain_rate_tensor_based_dissipation_rate_from_integrated_strain_rate_tensor_magnitude_sqr (
-        const real integrated_strain_rate_tensor_magnitude_sqr) const;
-
+    real compute_strain_rate_tensor_based_dissipation_rate_from_integrated_viscosity_times_strain_rate_tensor_magnitude_sqr (
+        const real integrated_viscosity_times_strain_rate_tensor_magnitude_sqr) const;
 
     /** Nondimensionalized viscous stress tensor, tau*
      *  Reference: Masatsuka 2018 "I do like CFD", p.148, eq.(4.14.12)
@@ -287,6 +306,24 @@ public:
         const std::array<real2,nstate> &primitive_soln,
         const std::array<dealii::Tensor<1,dim,real2>,nstate> &primitive_soln_gradient) const;
 
+    /// Tensor product magnitude squared
+    real get_tensor_product_magnitude_sqr (
+        const dealii::Tensor<2,dim,real> &tensor1,
+        const dealii::Tensor<2,dim,real> &tensor2) const;
+
+    /** Nondimensionalized Germano identity tensor, L*, from conservative solution and solution gradient
+     *  Reference: Flad and Gassner 2017
+     */
+    dealii::Tensor<2,dim,real> compute_germano_idendity_matrix_L_component (
+        const std::array<real,nstate> &conservative_soln) const;
+
+    /** Nondimensionalized Germano identity tensor, M*, from conservative solution and solution gradient
+     *  Reference: Flad and Gassner 2017
+     */
+    dealii::Tensor<2,dim,real> compute_germano_idendity_matrix_M_component (
+        const std::array<real,nstate> &conservative_soln,
+        const std::array<dealii::Tensor<1,dim,real>,nstate> &conservative_soln_gradient) const;
+
     /** Nondimensionalized viscous flux (i.e. dissipative flux) dot normal vector that accounts for gradient boundary conditions
      *  References: 
      *  (1) Masatsuka 2018 "I do like CFD", p.142, eq.(4.12.1-4.12.4),
@@ -301,7 +338,7 @@ public:
         const bool on_boundary,
         const dealii::types::global_dof_index cell_index,
         const dealii::Tensor<1,dim,real> &normal,
-        const int boundary_type) const override;
+        const int boundary_type) override;
 
     /** Nondimensionalized viscous flux (i.e. dissipative flux)
      *  Reference: Masatsuka 2018 "I do like CFD", p.142, eq.(4.12.1-4.12.4)
