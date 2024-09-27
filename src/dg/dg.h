@@ -108,6 +108,9 @@ public:
      *  DGBase cannot use nstate as a compile-time known.  */
     const unsigned int max_grid_degree;
 
+    const bool do_compute_low_order_solution; ///< Flag to compute the low order solution
+    const unsigned int low_poly_degree; ///< Polynomial degree of the low order solutions
+
     /// Principal constructor that will call delegated constructor.
     /** Will initialize mapping, fe_dg, all_parameters, volume_quadrature, and face_quadrature
      *  from DGBase. The it will new some FEValues that will be used to retrieve the
@@ -181,6 +184,9 @@ public:
     virtual void allocate_system (const bool compute_dRdW = true, 
                                   const bool compute_dRdX = true, 
                                   const bool compute_d2R = true);
+
+    /// Updates the low order solution for a given low polynomial degree
+    virtual void update_low_order_solution();
 
 private:
     /// Allocates the second derivatives.
@@ -397,6 +403,7 @@ public:
      *  and has write-access to all locally_owned_dofs
      */
     dealii::LinearAlgebra::distributed::Vector<double> solution;
+    dealii::LinearAlgebra::distributed::Vector<double> low_order_solution;
 
     ///The auxiliary equations' right hand sides.
     std::array<dealii::LinearAlgebra::distributed::Vector<double>,dim> auxiliary_right_hand_side;

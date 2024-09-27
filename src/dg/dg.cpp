@@ -88,6 +88,8 @@ DGBase<dim,real,MeshType>::DGBase(
     , initial_degree(degree)
     , max_degree(max_degree_input)
     , max_grid_degree(grid_degree_input)
+    , do_compute_low_order_solution(parameters_input->flow_solver_param.do_compute_low_order_solution)
+    , low_poly_degree(parameters_input->flow_solver_param.poly_degree_of_low_order_solution)
     , triangulation(triangulation_input)
     , fe_collection(std::get<0>(collection_tuple))
     , volume_quadrature_collection(std::get<1>(collection_tuple))
@@ -2193,6 +2195,12 @@ void DGBase<dim,real,MeshType>::allocate_auxiliary_equation()
 }
 
 template <int dim, typename real, typename MeshType>
+void DGBase<dim,real,MeshType>::update_low_order_solution()
+{
+    // do nothing
+}
+
+template <int dim, typename real, typename MeshType>
 void DGBase<dim,real,MeshType>::allocate_system (
     const bool compute_dRdW, const bool compute_dRdX, const bool compute_d2R)
 {
@@ -2251,6 +2259,11 @@ void DGBase<dim,real,MeshType>::allocate_system (
     solution.reinit(locally_owned_dofs, ghost_dofs, mpi_communicator);
     solution *= 0.0;
     solution.add(std::numeric_limits<real>::lowest());
+    if(this->do_compute_low_order_solution){
+        low_order_solution.reinit(locally_owned_dofs, ghost_dofs, mpi_communicator);
+        low_order_solution *= 0.0;
+        low_order_solution.add(std::numeric_limits<real>::lowest());    
+    }
     //right_hand_side.reinit(locally_owned_dofs, mpi_communicator);
     right_hand_side.reinit(locally_owned_dofs, ghost_dofs, mpi_communicator);
     right_hand_side.add(1.0); // Avoid 0 initial residual for output and logarithmic visualization.

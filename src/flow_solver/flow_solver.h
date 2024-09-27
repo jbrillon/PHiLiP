@@ -109,6 +109,7 @@ protected:
     const unsigned int number_of_fixed_times_to_output_solution; ///< Number of fixed times to output the solution
     const bool output_solution_at_exact_fixed_times;///< Flag for outputting the solution at exact fixed times by decreasing the time step on the fly
     const bool do_compute_unsteady_data_and_write_to_table;///< Flag for computing unsteady data and writting to table
+    const bool do_compute_low_order_solution;///< Flag for computing the low order solution
 
 public:
     /// Pointer to dg so it can be accessed externally.
@@ -134,7 +135,8 @@ private:
     void output_restart_files(
         const unsigned int current_restart_index,
         const double constant_time_step,
-        const std::shared_ptr <dealii::TableHandler> unsteady_data_table) const;
+        const std::shared_ptr <dealii::TableHandler> unsteady_data_table,
+        const std::shared_ptr <dealii::TableHandler> unsteady_data_table_low_order_solution) const;
 #endif
 
     /// Performs mesh adaptation.

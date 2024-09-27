@@ -50,6 +50,14 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                           dealii::Patterns::Integer(0, dealii::Patterns::Integer::max_int_value),
                           "Polynomial order (P) of the basis functions for DG.");
 
+        prm.declare_entry("do_compute_low_order_solution", "false",
+                          dealii::Patterns::Bool(),
+                          "Flag to compute the low order solution. False by default.");
+
+        prm.declare_entry("poly_degree_of_low_order_solution", "1",
+                          dealii::Patterns::Integer(0, dealii::Patterns::Integer::max_int_value),
+                          "Polynomial order (P) of the low order solution.");
+
         prm.declare_entry("max_poly_degree_for_adaptation", "0",
                           dealii::Patterns::Integer(0, dealii::Patterns::Integer::max_int_value),
                           "Maxiumum possible polynomial order (P) of the basis functions for DG "
@@ -329,6 +337,8 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
         else if (flow_case_type_string == "non_periodic_cube_flow")     {flow_case_type = non_periodic_cube_flow;}
 
         poly_degree = prm.get_integer("poly_degree");
+        do_compute_low_order_solution = prm.get_bool("do_compute_low_order_solution");
+        poly_degree_of_low_order_solution = prm.get_integer("poly_degree_of_low_order_solution");
         
         // get max poly degree for adaptation
         max_poly_degree_for_adaptation = prm.get_integer("max_poly_degree_for_adaptation");

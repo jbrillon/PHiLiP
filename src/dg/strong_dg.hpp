@@ -306,6 +306,9 @@ protected:
         dealii::Vector<real>                               &local_rhs_int_cell,
         dealii::Vector<real>                               &local_rhs_ext_cell);
 
+    /// Updates the low order solution for a given low polynomial degree
+    void update_low_order_solution() override;
+
 protected:
     /// Evaluate the integral over the cell volume and the specified derivatives.
     /** Compute both the right-hand side and the corresponding block of dRdW, dRdX, and/or d2R. */

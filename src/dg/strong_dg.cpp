@@ -3361,6 +3361,54 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_face_term_strong(
     }
 }
 
+template <int dim, int nstate, typename real, typename MeshType>
+void DGStrong<dim,nstate,real,MeshType>::update_low_order_solution() 
+{
+    const unsigned int max_dofs_per_cell = this->dof_handler.get_fe_collection().max_dofs_per_cell();
+    std::vector<dealii::types::global_dof_index> current_dofs_indices(max_dofs_per_cell);
+    OPERATOR::basis_functions<dim,2*dim> basis(1,this->max_degree,this->max_degree);
+    basis.build_1D_volume_operator(this->oneD_fe_collection_1state[this->max_degree],this->oneD_quadrature_collection[this->max_degree]);
+    OPERATOR::vol_projection_operator<dim,2*dim> vol_projection(1, this->max_degree, this->max_grid_degree);
+    vol_projection.build_1D_volume_operator(this->oneD_fe_collection_1state[this->low_poly_degree], this->oneD_quadrature_collection[this->max_degree]);
+    for (auto current_cell = this->dof_handler.begin_active(); current_cell!=this->dof_handler.end(); ++current_cell) {
+        if (!current_cell->is_locally_owned()) continue;
+    
+        const unsigned int poly_degree = current_cell->active_fe_index();
+        const unsigned int n_quad_pts = this->volume_quadrature_collection[poly_degree].size();
+        const unsigned int n_dofs_high_order = this->fe_collection[poly_degree].dofs_per_cell;
+        const unsigned int n_shape_fns_high_order = n_dofs_high_order/nstate;
+        const unsigned int n_dofs_low_order = this->fe_collection[this->low_poly_degree].dofs_per_cell;
+        const unsigned int n_shape_fns_low_order = n_dofs_low_order / nstate;
+        current_dofs_indices.resize(n_dofs_high_order);
+        current_cell->get_dof_indices (current_dofs_indices);
+
+        std::array<std::vector<real>,nstate> soln_coeff;
+        for (unsigned int idof = 0; idof < n_dofs_high_order; ++idof) {
+            const unsigned int istate = this->fe_collection[poly_degree].system_to_component_index(idof).first;
+            const unsigned int ishape = this->fe_collection[poly_degree].system_to_component_index(idof).second;
+            if(ishape == 0){
+                soln_coeff[istate].resize(n_shape_fns_high_order);
+            }
+            soln_coeff[istate][ishape] = this->solution(current_dofs_indices[idof]); 
+        }    
+        std::array<std::vector<real>,nstate> soln_at_q;
+        for(int istate=0; istate<nstate; istate++){
+            soln_at_q[istate].resize(n_quad_pts);
+            basis.matrix_vector_mult_1D(soln_coeff[istate], soln_at_q[istate],
+                                        basis.oneD_vol_operator);
+        }
+        for(int istate=0; istate<nstate; istate++){
+            std::vector<real> soln_coeff_low_order(n_shape_fns_low_order);
+            vol_projection.matrix_vector_mult_1D(soln_at_q[istate], soln_coeff_low_order,
+                                                 vol_projection.oneD_vol_operator);
+            for(unsigned int ishape=0; ishape<n_shape_fns_low_order; ishape++){
+                this->low_order_solution[current_dofs_indices[ishape+istate*n_shape_fns_low_order]] = soln_coeff_low_order[ishape];
+            }
+        }
+    }
+    // this->low_order_solution.update_ghost_values(); // <-- Not necessary
+}
+
 
 /*******************************************************************
  *

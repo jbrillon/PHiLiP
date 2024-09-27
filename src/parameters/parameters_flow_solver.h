@@ -34,6 +34,8 @@ public:
     FlowCaseType flow_case_type; ///< Selected FlowCaseType from the input file
 
     unsigned int poly_degree; ///< Polynomial order (P) of the basis functions for DG.
+    bool do_compute_low_order_solution; ///< Flag to compute the low order solution
+    unsigned int poly_degree_of_low_order_solution; ///< Polynomial order of the low order solution
     unsigned int max_poly_degree_for_adaptation; ///< Maximum polynomial order of the DG basis functions for adaptation.
     double final_time; ///< Final solution time
     double constant_time_step; ///< Constant time step
