@@ -1494,8 +1494,10 @@ void PeriodicTurbulence<dim, nstate>::compute_unsteady_data_and_write_to_table(
         this->add_value_to_data_table(this->uncorrected_pressure_dilatation_based_dissipation_rate,"eps_pressure_uncorrected",unsteady_data_table);
         if(is_viscous_flow) this->add_value_to_data_table(this->uncorrected_dilatational_dissipation_rate,"eps_dilatational_uncorrected",unsteady_data_table);
         // Write to file
-        std::ofstream unsteady_data_table_file(this->unsteady_data_table_filename_with_extension);
-        if(do_write_unsteady_data_table_file) unsteady_data_table->write_text(unsteady_data_table_file);
+        if(do_write_unsteady_data_table_file) {
+            std::ofstream unsteady_data_table_file(this->unsteady_data_table_filename_with_extension);
+            unsteady_data_table->write_text(unsteady_data_table_file);
+        }
     }
     // Print to console
     this->pcout << "    Iter: " << current_iteration
