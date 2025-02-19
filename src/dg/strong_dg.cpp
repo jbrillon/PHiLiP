@@ -1121,14 +1121,14 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
     std::vector<dealii::types::global_dof_index> dof_indices_artificial_dissipation(n_dofs_arti_diss);
     artificial_dissipation_cell->get_dof_indices (dof_indices_artificial_dissipation);
     for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
-        real artificial_diss_coeff_at_q = 0.0;
+        real artificial_diss_coeff_at_q_ = 0.0;
         if ( this->all_parameters->artificial_dissipation_param.add_artificial_dissipation ) {
             const dealii::Point<dim,real> point = this->volume_quadrature_collection[poly_degree].point(iquad);
             for (unsigned int idof=0; idof<n_dofs_arti_diss; ++idof) {
                 const unsigned int index = dof_indices_artificial_dissipation[idof];
-                artificial_diss_coeff_at_q += this->artificial_dissipation_c0[index] * this->fe_q_artificial_dissipation.shape_value(idof, point);
+                artificial_diss_coeff_at_q_ += this->artificial_dissipation_c0[index] * this->fe_q_artificial_dissipation.shape_value(idof, point);
             }
-            max_artificial_diss = std::max(artificial_diss_coeff_at_q, max_artificial_diss);
+            max_artificial_diss = std::max(artificial_diss_coeff_at_q_, max_artificial_diss);
         }
     }
     // Get max_dt_cell for time_scaled_solution with pseudotime
@@ -1298,7 +1298,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
 
         if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
             using DirectionalState = DirectionalState<real2, dim, nstate>;
-            const DirectionalState artificial_diss_phys_flux_at_q = this->artificial_dissip->calc_artificial_dissipation_flux(soln_at_q[iquad], soln_grad_at_q[iquad], artificial_diss_coeff_at_q[iquad]);
+            const DirectionalState artificial_diss_phys_flux_at_q = this->artificial_dissip->calc_artificial_dissipation_flux(soln_state, aux_soln_state, artificial_diss_coeff_at_q[iquad]);
             for (int s=0; s<nstate; s++) {
                 diffusive_phys_flux[s] += artificial_diss_phys_flux_at_q[s];
             }
