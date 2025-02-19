@@ -929,6 +929,11 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             }
         }
     }
+    std::vector<real> soln_coeff_stacked(n_dofs_cell);
+    for (unsigned int idof = 0; idof < n_dofs_cell; ++idof) {
+        soln_coeff_stacked[idof] = this->solution(cell_dofs_indices[idof]);
+    }
+
     std::array<std::vector<real>,nstate> soln_at_q;
     std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> aux_soln_at_q; //auxiliary sol at flux nodes
     std::vector<std::array<real,nstate>> soln_at_q_for_max_CFL(n_quad_pts);//Need soln written in a different for to use pre-existing max CFL function
@@ -948,10 +953,10 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         }
     }
 
-    std::vector<real2> artificial_diss_coeff_at_q(n_quad_pts);
+    std::vector<real> artificial_diss_coeff_at_q(n_quad_pts);
+    real arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff_stacked, this->fe_collection[poly_degree], metric_oper.det_Jac_vol);
     for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad)
     {
-        real2 arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff, this->fe_collection[poly_degree], metric_oper.det_Jac_vol[iquad]);
         artificial_diss_coeff_at_q[iquad] = arti_diss;
        /* dealii::Point<dim,real> point = unit_quad_pts[iquad];
         // Rescale over -1,1
@@ -1296,7 +1301,7 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
 
         if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
-            using DirectionalState = DirectionalState<real2, dim, nstate>;
+            using DirectionalState = std::array<dealii::Tensor<1,dim,real>,nstate>;
             const DirectionalState artificial_diss_phys_flux_at_q = this->artificial_dissip->calc_artificial_dissipation_flux(soln_state, aux_soln_state, artificial_diss_coeff_at_q[iquad]);
             for (int s=0; s<nstate; s++) {
                 diffusive_phys_flux[s] += artificial_diss_phys_flux_at_q[s];
