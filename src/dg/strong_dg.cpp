@@ -948,6 +948,27 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         }
     }
 
+    std::vector<real2> artificial_diss_coeff_at_q(n_quad_pts);
+    // TO DO: Need to defined the arguments in the following line
+    real2 arti_diss = this->discontinuity_sensor(quadrature, local_solution.coefficients, local_solution.finite_element, jac_det);
+    for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad)
+    {
+        artificial_diss_coeff_at_q[iquad] = arti_diss;
+       /* dealii::Point<dim,real> point = unit_quad_pts[iquad];
+        // Rescale over -1,1
+        for (int d=0; d<dim; ++d)
+        {
+            point[d] = point[d]*2 - 1.0;
+        }
+        double gegenbauer_factor = 0.1;
+        double gegenbauer = 1.0;
+        for (int d=0; d<dim; ++d)
+        {
+            gegenbauer *= std::pow(1-point[d]*point[d], gegenbauer_factor);
+        }
+        artificial_diss_coeff_at_q[iquad] = arti_diss * gegenbauer;*/
+    }
+
     // -- Solution at legendre poly
     std::array<std::vector<real>,nstate> legendre_soln_at_q;
     std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> legendre_aux_soln_at_q; // legendre auxiliary sol at flux nodes
@@ -1274,6 +1295,14 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         std::array<dealii::Tensor<1,dim,real>,nstate> diffusive_phys_flux;
         //Compute the physical dissipative flux
         diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+
+        if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
+            using DirectionalState = DirectionalState<real2, dim, nstate>;
+            const DirectionalState artificial_diss_phys_flux_at_q = this->artificial_dissip->calc_artificial_dissipation_flux(soln_at_q[iquad], soln_grad_at_q[iquad], artificial_diss_coeff_at_q[iquad]);
+            for (int s=0; s<nstate; s++) {
+                diffusive_phys_flux[s] += artificial_diss_phys_flux_at_q[s];
+            }
+        }
 
         // Manufactured source
         std::array<real,nstate> manufactured_source;
