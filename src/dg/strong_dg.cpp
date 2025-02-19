@@ -949,10 +949,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
     }
 
     std::vector<real2> artificial_diss_coeff_at_q(n_quad_pts);
-    // TO DO: Need to defined the arguments in the following line
-    real2 arti_diss = this->discontinuity_sensor(quadrature, local_solution.coefficients, local_solution.finite_element, jac_det);
     for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad)
     {
+        real2 arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff, this->fe_collection[poly_degree], metric_oper.det_Jac_vol[iquad]);
         artificial_diss_coeff_at_q[iquad] = arti_diss;
        /* dealii::Point<dim,real> point = unit_quad_pts[iquad];
         // Rescale over -1,1
