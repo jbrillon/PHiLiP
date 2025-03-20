@@ -955,22 +955,23 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
 
     std::vector<real> artificial_diss_coeff_at_q(n_quad_pts);
     real arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff_stacked, this->fe_collection[poly_degree], metric_oper.det_Jac_vol);
+    const std::vector<dealii::Point<dim,double>> &unit_quad_pts = this->volume_quadrature_collection[poly_degree].get_points();
     for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad)
     {
         artificial_diss_coeff_at_q[iquad] = arti_diss;
-       /* dealii::Point<dim,real> point = unit_quad_pts[iquad];
+        dealii::Point<dim,real> point = unit_quad_pts[iquad];
         // Rescale over -1,1
         for (int d=0; d<dim; ++d)
         {
             point[d] = point[d]*2 - 1.0;
         }
-        double gegenbauer_factor = 0.1;
+        const double gegenbauer_factor = 0.1;
         double gegenbauer = 1.0;
         for (int d=0; d<dim; ++d)
         {
             gegenbauer *= std::pow(1-point[d]*point[d], gegenbauer_factor);
         }
-        artificial_diss_coeff_at_q[iquad] = arti_diss * gegenbauer;*/
+        artificial_diss_coeff_at_q[iquad] = arti_diss * gegenbauer;
     }
 
     // -- Solution at legendre poly
