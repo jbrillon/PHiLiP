@@ -22,6 +22,14 @@ set conv_num_flux = two_point_flux
 #set conv_num_flux = roe
 set diss_num_flux = symm_internal_penalty
 
+subsection artificial dissipation
+  set add_artificial_dissipation = false
+  # this is something greater than the max eigenvalue = |v|+c at all times 
+  set mu_artificial_dissipation = 1.0 
+  # this the ramping function for smoothing (greater value goes to zero slower)
+  set kappa_artificial_dissipation = 0.5
+end
+
 # limiter
 subsection limiter
   set bound_preserving_limiter = positivity_preservingWang2012
