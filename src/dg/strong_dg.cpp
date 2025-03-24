@@ -959,9 +959,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
     real arti_diss = 0.0;
     /*
     if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
-        //*******************************************************
+        // *******************************************************
         // Compute the smoothness indicator for shock-capturing
-        //*******************************************************
+        // *******************************************************
         // -- Low-pass filtered solution at legendre poly
         std::array<std::vector<real>,nstate> legendre_soln_at_q;
         //==================================================
