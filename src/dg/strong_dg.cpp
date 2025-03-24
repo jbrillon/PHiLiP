@@ -955,9 +955,62 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         }
     }
 
-    std::vector<real> artificial_diss_coeff_at_q(n_quad_pts);
+    // Compute the smoothness indicator for shock-capturing
     real arti_diss = 0.0;
+    if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
+        // -- Low-pass filtered solution at legendre poly
+        std::array<std::vector<real>,nstate> legendre_soln_at_q;
+        //==================================================
+        // PROJECT TO LEGENDRE BASIS AND MODALLY FILTER
+        //==================================================
+        // Details: this projects to Legendre basis, truncates, then interpolates back to quad nodes.
+        // -- Constructor for tensor product polynomials based on Polynomials::Legendre interpolation. 
+        dealii::FE_DGQLegendre<1,1> legendre_poly_1D(poly_degree);
+        // -- Projection operator for legendre basis
+        OPERATOR::vol_projection_operator<dim,2*dim,real> legendre_soln_basis_projection_oper(1, poly_degree, this->max_grid_degree);
+        legendre_soln_basis_projection_oper.build_1D_volume_operator(legendre_poly_1D, this->oneD_quadrature_collection[poly_degree]);
+        // -- Legendre basis functions 
+        OPERATOR::basis_functions<dim,2*dim,real> legendre_soln_basis(1, poly_degree, this->max_grid_degree);
+        legendre_soln_basis.build_1D_volume_operator(legendre_poly_1D, this->oneD_quadrature_collection[poly_degree]);
+        for(int istate=0; istate<nstate; istate++){
+            //==================================================
+            // Solution
+            //==================================================
+            // -- (1) Project to Legendre basis
+            std::vector<real> legendre_soln_coeff(n_shape_fns);
+            legendre_soln_basis_projection_oper.matrix_vector_mult_1D(soln_at_q[istate], legendre_soln_coeff,
+                                                                      legendre_soln_basis_projection_oper.oneD_vol_operator);
+            // -- (2) Truncate highest mode for low-pass filter, equivalent to Persson & Peraire Eq.(6)
+            legendre_soln_coeff[n_shape_fns-1] = 0.0;
+            std::cout << "n_shape_fns = " << n_shape_fns <<std::endl; // TO DO: Remove this
+            std::cout << "poly_degree = " << poly_degree <<std::endl; // TO DO: Remove this
+            
+            // -- (3) Interpolate filtered solution back to quadrature points
+            legendre_soln_at_q[istate].resize(n_quad_pts);
+            legendre_soln_basis.matrix_vector_mult_1D(legendre_soln_coeff, legendre_soln_at_q[istate],
+                                                      legendre_soln_basis.oneD_vol_operator);
+            //==================================================
+        }
+        //=======================================================
+        // COMPUTE INNER PRODUCTS
+        //=======================================================
+        // // Compute the primitive soln at all iquad and fill arrays
+        // for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
+        //     // extract conservative soln state
+        //     std::array<real,nstate> soln_state;
+        //     std::array<real,nstate> truncated_soln_state;
+        //     for(int istate=0; istate<nstate; istate++){
+        //         soln_state[istate] = soln_at_q[istate][iquad];
+        //         truncated_soln_state[istate] = legendre_soln_at_q[istate][iquad];
+        //     }
+            
+        // }
+    }
+
+
+
     const std::vector<dealii::Point<dim,double>> &unit_quad_pts = this->volume_quadrature_collection[poly_degree].get_points();
+    std::vector<real> artificial_diss_coeff_at_q(n_quad_pts);
     if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
         arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff_stacked, this->fe_collection[poly_degree], metric_oper.det_Jac_vol);
         for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad)
