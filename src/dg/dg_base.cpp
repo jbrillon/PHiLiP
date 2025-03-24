@@ -2980,7 +2980,8 @@ real2 DGBase<dim,real,MeshType>::discontinuity_sensor(
     const dealii::FESystem<dim,dim> fe_lower(fe_dgq_lower, nstate);
 
     // Projection quadrature.
-    const dealii::QGauss<dim> projection_quadrature(degree+5);
+    // const dealii::QGauss<dim> projection_quadrature(degree+5);
+    const dealii::QGauss<dim> projection_quadrature(degree);
     std::vector< real2 > soln_coeff_lower = project_function<dim,real2>( soln_coeff_high, fe_high, fe_lower, projection_quadrature);
 
     // Quadrature used for solution difference.
