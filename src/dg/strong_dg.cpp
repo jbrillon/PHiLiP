@@ -980,6 +980,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             std::vector<real> legendre_soln_coeff(n_shape_fns);
             legendre_soln_basis_projection_oper.matrix_vector_mult_1D(soln_at_q[istate], legendre_soln_coeff,
                                                                       legendre_soln_basis_projection_oper.oneD_vol_operator);
+            for(unsigned int ishape=0; ishape<n_shape_fns; ishape++){
+                std::cout << "ishape = " << ishape << "    legendre_soln_coeff = " << legendre_soln_coeff[ishape] << std::endl;
+            }
             // -- (2) Truncate highest mode for low-pass filter, equivalent to Persson & Peraire Eq.(6)
             legendre_soln_coeff[n_shape_fns-1] = 0.0;
             std::cout << "n_shape_fns = " << n_shape_fns <<std::endl; // TO DO: Remove this
