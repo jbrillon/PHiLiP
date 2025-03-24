@@ -470,6 +470,14 @@ public:
         const dealii::FiniteElement<dim,dim> &fe_high,
         const std::vector<real2> &jac_det);
 
+    /** Discontinuity sensor smoothing function */
+    template <typename real2>
+    real2 discontinuity_sensor_smoothing_function(
+        const real2 soln_norm,
+        const real2 error,
+        const real2 element_volume,
+        const unsigned int degree);
+
     /// Current optimization dual variables corresponding to the residual constraints also known as the adjoint
     /** This is used to evaluate the dot-product between the dual and the 2nd derivatives of the residual
      *  since storing the 2nd order partials of the residual is a very large 3rd order tensor.

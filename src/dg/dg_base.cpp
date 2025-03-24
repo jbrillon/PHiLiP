@@ -2926,6 +2926,41 @@ std::vector< real > project_function(
 
 template <int dim, typename real,typename MeshType>
 template <typename real2>
+real2 DGBase<dim,real,MeshType>::discontinuity_sensor_smoothing_function(
+    const real2 soln_norm,
+    const real2 error,
+    const real2 element_volume,
+    const unsigned int degree)
+{
+    if (soln_norm < 1e-15) return 0;
+
+    const real2 S_e = sqrt(error / soln_norm);
+    const real2 s_e = log10(S_e);
+
+    const double mu_scale = all_parameters->artificial_dissipation_param.mu_artificial_dissipation;
+    const double s_0 = -0.00 - 4.00*log10(degree);
+    const double kappa = all_parameters->artificial_dissipation_param.kappa_artificial_dissipation;
+    const double low = s_0 - kappa;
+    const double upp = s_0 + kappa;
+
+    const real2 diameter = pow(element_volume, 1.0/dim);
+    const real2 eps_0 = mu_scale * diameter / (double)degree;
+
+    if ( s_e < low) return 0.0;
+
+    if ( s_e > upp) 
+    {
+        return eps_0;
+    }
+
+    const double PI = 4*atan(1);
+    real2 eps = 1.0 + sin(PI * (s_e - s_0) * 0.5 / kappa);
+    eps *= eps_0 * 0.5;
+    return eps;
+}
+
+template <int dim, typename real,typename MeshType>
+template <typename real2>
 real2 DGBase<dim,real,MeshType>::discontinuity_sensor(
     const dealii::Quadrature<dim> &volume_quadrature,
     const std::vector< real2 > &soln_coeff_high,
@@ -2985,32 +3020,7 @@ real2 DGBase<dim,real,MeshType>::discontinuity_sensor(
             soln_norm += soln_high[s] * soln_high[s] * JxW;
         }
     }
-
-    if (soln_norm < 1e-15) return 0;
-
-    const real2 S_e = sqrt(error / soln_norm);
-    const real2 s_e = log10(S_e);
-
-    const double mu_scale = all_parameters->artificial_dissipation_param.mu_artificial_dissipation;
-    const double s_0 = -0.00 - 4.00*log10(degree);
-    const double kappa = all_parameters->artificial_dissipation_param.kappa_artificial_dissipation;
-    const double low = s_0 - kappa;
-    const double upp = s_0 + kappa;
-
-    const real2 diameter = pow(element_volume, 1.0/dim);
-    const real2 eps_0 = mu_scale * diameter / (double)degree;
-
-    if ( s_e < low) return 0.0;
-
-    if ( s_e > upp) 
-    {
-        return eps_0;
-    }
-
-    const double PI = 4*atan(1);
-    real2 eps = 1.0 + sin(PI * (s_e - s_0) * 0.5 / kappa);
-    eps *= eps_0 * 0.5;
-    return eps;
+    return discontinuity_sensor_smoothing_function<real2>(soln_norm,error,element_volume,degree);
 }
 
 template <int dim, typename real, typename MeshType>
@@ -3046,6 +3056,23 @@ template RadType DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulatio
 template FadFadType DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulation<PHILIP_DIM>>::discontinuity_sensor<FadFadType>(const dealii::Quadrature<PHILIP_DIM> &volume_quadrature, const std::vector< FadFadType > &soln_coeff_high, const dealii::FiniteElement<PHILIP_DIM,PHILIP_DIM> &fe_high, const std::vector<FadFadType>  &jac_det);
 template RadFadType DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulation<PHILIP_DIM>>::discontinuity_sensor<RadFadType>(const dealii::Quadrature<PHILIP_DIM> &volume_quadrature, const std::vector< RadFadType > &soln_coeff_high, const dealii::FiniteElement<PHILIP_DIM,PHILIP_DIM> &fe_high, const std::vector<RadFadType>  &jac_det);
 
+template double DGBase<PHILIP_DIM,double,dealii::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<double>(const double soln_norm, const double error, const double element_volume, const unsigned int degree);
+template FadType DGBase<PHILIP_DIM,double,dealii::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<FadType>(const FadType soln_norm, const FadType error, const FadType element_volume, const unsigned int degree);
+template RadType DGBase<PHILIP_DIM,double,dealii::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<RadType>(const RadType soln_norm, const RadType error, const RadType element_volume, const unsigned int degree);
+template FadFadType DGBase<PHILIP_DIM,double,dealii::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<FadFadType>(const FadFadType soln_norm, const FadFadType error, const FadFadType element_volume, const unsigned int degree);
+template RadFadType DGBase<PHILIP_DIM,double,dealii::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<RadFadType>(const RadFadType soln_norm, const RadFadType error, const RadFadType element_volume, const unsigned int degree);
+
+template double DGBase<PHILIP_DIM,double,dealii::parallel::distributed::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<double>(const double soln_norm, const double error, const double element_volume, const unsigned int degree);
+template FadType DGBase<PHILIP_DIM,double,dealii::parallel::distributed::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<FadType>(const FadType soln_norm, const FadType error, const FadType element_volume, const unsigned int degree);
+template RadType DGBase<PHILIP_DIM,double,dealii::parallel::distributed::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<RadType>(const RadType soln_norm, const RadType error, const RadType element_volume, const unsigned int degree);
+template FadFadType DGBase<PHILIP_DIM,double,dealii::parallel::distributed::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<FadFadType>(const FadFadType soln_norm, const FadFadType error, const FadFadType element_volume, const unsigned int degree);
+template RadFadType DGBase<PHILIP_DIM,double,dealii::parallel::distributed::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<RadFadType>(const RadFadType soln_norm, const RadFadType error, const RadFadType element_volume, const unsigned int degree);
+
+template double DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<double>(const double soln_norm, const double error, const double element_volume, const unsigned int degree);
+template FadType DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<FadType>(const FadType soln_norm, const FadType error, const FadType element_volume, const unsigned int degree);
+template RadType DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<RadType>(const RadType soln_norm, const RadType error, const RadType element_volume, const unsigned int degree);
+template FadFadType DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<FadFadType>(const FadFadType soln_norm, const FadFadType error, const FadFadType element_volume, const unsigned int degree);
+template RadFadType DGBase<PHILIP_DIM,double,dealii::parallel::shared::Triangulation<PHILIP_DIM>>::discontinuity_sensor_smoothing_function<RadFadType>(const RadFadType soln_norm, const RadFadType error, const RadFadType element_volume, const unsigned int degree);
 
 template void
 DGBase<PHILIP_DIM,double,dealii::Triangulation<PHILIP_DIM>>::assemble_cell_residual<dealii::TriaActiveIterator<dealii::DoFCellAccessor<PHILIP_DIM, PHILIP_DIM, false>>,dealii::TriaActiveIterator<dealii::DoFCellAccessor<PHILIP_DIM, PHILIP_DIM, false>>>(

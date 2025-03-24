@@ -929,12 +929,12 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             }
         }
     }
-    std::vector<real> soln_coeff_stacked(n_dofs_cell);
-    if(this->all_parameters->artificial_dissipation_param.add_artificial_dissipation){
-        for (unsigned int idof = 0; idof < n_dofs_cell; ++idof) {
-            soln_coeff_stacked[idof] = this->solution(cell_dofs_indices[idof]);
-        }    
-    }
+    // std::vector<real> soln_coeff_stacked(n_dofs_cell);
+    // if(this->all_parameters->artificial_dissipation_param.add_artificial_dissipation){
+    //     for (unsigned int idof = 0; idof < n_dofs_cell; ++idof) {
+    //         soln_coeff_stacked[idof] = this->solution(cell_dofs_indices[idof]);
+    //     }    
+    // }
 
     std::array<std::vector<real>,nstate> soln_at_q;
     std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> aux_soln_at_q; //auxiliary sol at flux nodes
@@ -955,9 +955,12 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         }
     }
 
-    // Compute the smoothness indicator for shock-capturing
+    
     real arti_diss = 0.0;
     if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
+        //*******************************************************
+        // Compute the smoothness indicator for shock-capturing
+        //*******************************************************
         // -- Low-pass filtered solution at legendre poly
         std::array<std::vector<real>,nstate> legendre_soln_at_q;
         //==================================================
@@ -980,13 +983,9 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             std::vector<real> legendre_soln_coeff(n_shape_fns);
             legendre_soln_basis_projection_oper.matrix_vector_mult_1D(soln_at_q[istate], legendre_soln_coeff,
                                                                       legendre_soln_basis_projection_oper.oneD_vol_operator);
-            for(unsigned int ishape=0; ishape<n_shape_fns; ishape++){
-                std::cout << "ishape = " << ishape << "    legendre_soln_coeff = " << legendre_soln_coeff[ishape] << std::endl;
-            }
+            
             // -- (2) Truncate highest mode for low-pass filter, equivalent to Persson & Peraire Eq.(6)
-            legendre_soln_coeff[n_shape_fns-1] = 0.0;
-            std::cout << "n_shape_fns = " << n_shape_fns <<std::endl; // TO DO: Remove this
-            std::cout << "poly_degree = " << poly_degree <<std::endl; // TO DO: Remove this
+            legendre_soln_coeff[n_shape_fns-1] = 0.0; // TO DO: REVIEW THIS WITH ALEX
             
             // -- (3) Interpolate filtered solution back to quadrature points
             legendre_soln_at_q[istate].resize(n_quad_pts);
@@ -997,25 +996,36 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         //=======================================================
         // COMPUTE INNER PRODUCTS
         //=======================================================
-        // // Compute the primitive soln at all iquad and fill arrays
-        // for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
-        //     // extract conservative soln state
-        //     std::array<real,nstate> soln_state;
-        //     std::array<real,nstate> truncated_soln_state;
-        //     for(int istate=0; istate<nstate; istate++){
-        //         soln_state[istate] = soln_at_q[istate][iquad];
-        //         truncated_soln_state[istate] = legendre_soln_at_q[istate][iquad];
-        //     }
-            
-        // }
+        real element_volume = 0.0;
+        real error = 0.0;
+        real soln_norm = 0.0;
+        // Compute the primitive soln at all iquad and fill arrays
+        for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
+            // extract conservative soln state
+            std::array<real,nstate> soln_state;
+            std::array<real,nstate> truncated_soln_state;
+            for(int istate=0; istate<nstate; istate++){
+                soln_state[istate] = soln_at_q[istate][iquad];
+                truncated_soln_state[istate] = legendre_soln_at_q[istate][iquad];
+            }
+            // Quadrature
+            const real JxW = metric_oper.det_Jac_vol[iquad] * vol_quad_weights[iquad];
+            element_volume += JxW;
+            // Only integrate over the first state variable.
+            // Persson and Peraire only did density.
+            for (unsigned int s=0; s<1/*nstate*/; ++s) {
+                error += (soln_state[s] - truncated_soln_state[s]) * (soln_state[s] - truncated_soln_state[s]) * JxW;
+                soln_norm += soln_state[s] * soln_state[s] * JxW;
+            }
+        }
+        // compute the smoothing function
+        arti_diss = this->discontinuity_sensor_smoothing_function(soln_norm,error,element_volume,poly_degree);
     }
-
-
 
     const std::vector<dealii::Point<dim,double>> &unit_quad_pts = this->volume_quadrature_collection[poly_degree].get_points();
     std::vector<real> artificial_diss_coeff_at_q(n_quad_pts);
     if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
-        arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff_stacked, this->fe_collection[poly_degree], metric_oper.det_Jac_vol);
+        // arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff_stacked, this->fe_collection[poly_degree], metric_oper.det_Jac_vol);
         for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad)
         {
             artificial_diss_coeff_at_q[iquad] = arti_diss;
