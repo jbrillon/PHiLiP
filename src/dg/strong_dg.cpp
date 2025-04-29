@@ -929,6 +929,13 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
             }
         }
     }
+    // std::vector<real> soln_coeff_stacked(n_dofs_cell);
+    // if(this->all_parameters->artificial_dissipation_param.add_artificial_dissipation){
+    //     for (unsigned int idof = 0; idof < n_dofs_cell; ++idof) {
+    //         soln_coeff_stacked[idof] = this->solution(cell_dofs_indices[idof]);
+    //     }    
+    // }
+
     std::array<std::vector<real>,nstate> soln_at_q;
     std::array<dealii::Tensor<1,dim,std::vector<real>>,nstate> aux_soln_at_q; //auxiliary sol at flux nodes
     std::vector<std::array<real,nstate>> soln_at_q_for_max_CFL(n_quad_pts);//Need soln written in a different for to use pre-existing max CFL function
@@ -945,6 +952,112 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         }
         for(unsigned int iquad=0; iquad<n_quad_pts; iquad++){
             soln_at_q_for_max_CFL[iquad][istate] = soln_at_q[istate][iquad];
+        }
+    }
+
+    
+    real arti_diss = 0.0;
+    if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
+        // *******************************************************
+        // Compute the smoothness indicator for shock-capturing
+        // *******************************************************
+        // -- Low-pass filtered solution at legendre poly
+        // std::array<std::vector<real>,nstate> legendre_soln_at_q;
+        // std::array<std::vector<real>,nstate> diff_soln_at_q;
+        //==================================================
+        // PROJECT TO LEGENDRE BASIS AND MODALLY FILTER
+        //==================================================
+        // Details: this projects to Legendre basis, truncates, then interpolates back to quad nodes.
+        // -- Constructor for tensor product polynomials based on Polynomials::Legendre interpolation. 
+        dealii::FE_DGQLegendre<1,1> legendre_poly_1D(poly_degree);
+        // -- Projection operator for legendre basis
+        OPERATOR::vol_projection_operator<dim,2*dim,real> legendre_soln_basis_projection_oper(1, poly_degree, this->max_grid_degree);
+        legendre_soln_basis_projection_oper.build_1D_volume_operator(legendre_poly_1D, this->oneD_quadrature_collection[poly_degree]);
+        // -- Legendre basis functions 
+        OPERATOR::basis_functions<dim,2*dim,real> legendre_soln_basis(1, poly_degree, this->max_grid_degree);
+        legendre_soln_basis.build_1D_volume_operator(legendre_poly_1D, this->oneD_quadrature_collection[poly_degree]);
+        real error = 0.0;
+        real soln_norm = 0.0;
+        for(int istate=0; istate<1; istate++){ // NOTE: only for density
+            //==================================================
+            // Solution
+            //==================================================
+            // -- (1) Project to Legendre basis
+            std::vector<real> legendre_soln_coeff(n_shape_fns);
+            legendre_soln_basis_projection_oper.matrix_vector_mult_1D(soln_at_q[istate], legendre_soln_coeff,
+                                                                      legendre_soln_basis_projection_oper.oneD_vol_operator);
+
+            // -- (2) Truncate highest mode for low-pass filter, equivalent to Persson & Peraire Eq.(6)
+            const unsigned int pp1 = (poly_degree+1);
+            const unsigned int pp1sqr = pp1*pp1;
+            std::vector<real> diff_legendre_soln_coeff(n_shape_fns);
+            for(unsigned int ishape = 0; ishape<n_shape_fns; ++ishape){
+                diff_legendre_soln_coeff[ishape] = 0.0;
+                const unsigned int kval = ishape/pp1sqr;
+                const unsigned int jval = (ishape - pp1sqr*kval)/pp1;
+                const unsigned int ival = ishape - pp1*jval - pp1sqr*kval;
+                if((ival==poly_degree || jval==poly_degree) || kval==poly_degree) {
+                    diff_legendre_soln_coeff[ishape] = legendre_soln_coeff[ishape];
+                }
+            }
+            
+            // // -- (3) Interpolate filtered solution back to quadrature points
+            // legendre_soln_at_q[istate].resize(n_quad_pts);
+            // legendre_soln_basis.matrix_vector_mult_1D(legendre_soln_coeff, legendre_soln_at_q[istate],
+            //                                           legendre_soln_basis.oneD_vol_operator);
+            // //==================================================
+            // // -- (4) Compute diff solution
+            // diff_legendre_soln_at_q[istate].resize(n_quad_pts);
+            // legendre_soln_basis.matrix_vector_mult_1D(diff_legendre_soln_coeff, diff_legendre_soln_at_q[istate],
+            //                                           legendre_soln_basis.oneD_vol_operator);
+            
+            //=======================================================
+            // COMPUTE INNER PRODUCTS
+            //=======================================================
+            for(unsigned int ishape = 0; ishape<n_shape_fns; ++ishape)
+            {
+                soln_norm += legendre_soln_coeff[ishape]*legendre_soln_coeff[ishape];
+                error += diff_legendre_soln_coeff[ishape]*diff_legendre_soln_coeff[ishape];
+            }
+        }
+        
+        // warning: hard-coded for cube domain using the parameters below (works for viscous TGV)
+        // real domain_length = this->all_parameters->flow_solver_param.grid_right_bound - this->all_parameters->flow_solver_param.grid_left_bound;
+        // real element_length = domain_length/((double)this->all_parameters->flow_solver_param.number_of_grid_elements_per_dimension);
+        // element_volume = pow(element_length,dim);
+        
+        // Compute the cell volume
+        real element_volume = 0.0;
+        for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
+            // Quadrature
+            const real JxW = metric_oper.det_Jac_vol[iquad] * vol_quad_weights[iquad];
+            element_volume += JxW;
+        }
+
+        // compute the smoothing function
+        arti_diss = this->discontinuity_sensor_smoothing_function(soln_norm,error,element_volume,poly_degree);
+    }
+
+    const std::vector<dealii::Point<dim,double>> &unit_quad_pts = this->volume_quadrature_collection[poly_degree].get_points();
+    std::vector<real> artificial_diss_coeff_at_q(n_quad_pts);
+    if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
+        // arti_diss = this->discontinuity_sensor(this->volume_quadrature_collection[poly_degree], soln_coeff_stacked, this->fe_collection[poly_degree], metric_oper.det_Jac_vol);
+        for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad)
+        {
+            artificial_diss_coeff_at_q[iquad] = arti_diss;
+            dealii::Point<dim,real> point = unit_quad_pts[iquad];
+            // Rescale over -1,1
+            for (int d=0; d<dim; ++d)
+            {
+                point[d] = point[d]*2 - 1.0;
+            }
+            const double gegenbauer_factor = 0.1;
+            double gegenbauer = 1.0;
+            for (int d=0; d<dim; ++d)
+            {
+                gegenbauer *= std::pow(1-point[d]*point[d], gegenbauer_factor);
+            }
+            artificial_diss_coeff_at_q[iquad] = arti_diss * gegenbauer;
         }
     }
 
@@ -1099,17 +1212,17 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         this->triangulation.get(), cell->level(), cell->index(), &(this->dof_handler_artificial_dissipation));
     std::vector<dealii::types::global_dof_index> dof_indices_artificial_dissipation(n_dofs_arti_diss);
     artificial_dissipation_cell->get_dof_indices (dof_indices_artificial_dissipation);
-    for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
-        real artificial_diss_coeff_at_q = 0.0;
-        if ( this->all_parameters->artificial_dissipation_param.add_artificial_dissipation ) {
-            const dealii::Point<dim,real> point = this->volume_quadrature_collection[poly_degree].point(iquad);
-            for (unsigned int idof=0; idof<n_dofs_arti_diss; ++idof) {
-                const unsigned int index = dof_indices_artificial_dissipation[idof];
-                artificial_diss_coeff_at_q += this->artificial_dissipation_c0[index] * this->fe_q_artificial_dissipation.shape_value(idof, point);
-            }
-            max_artificial_diss = std::max(artificial_diss_coeff_at_q, max_artificial_diss);
-        }
-    }
+    // for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
+        // real artificial_diss_coeff_at_q_ = 0.0;
+        // if ( this->all_parameters->artificial_dissipation_param.add_artificial_dissipation ) {
+        //     const dealii::Point<dim,real> point = this->volume_quadrature_collection[poly_degree].point(iquad);
+        //     for (unsigned int idof=0; idof<n_dofs_arti_diss; ++idof) {
+        //         const unsigned int index = dof_indices_artificial_dissipation[idof];
+        //         artificial_diss_coeff_at_q_ += this->artificial_dissipation_c0[index] * this->fe_q_artificial_dissipation.shape_value(idof, point);
+        //     }
+        //     max_artificial_diss = std::max(artificial_diss_coeff_at_q_, max_artificial_diss);
+        // }
+    // }
     // Get max_dt_cell for time_scaled_solution with pseudotime
     real cell_volume_estimate = 0.0;
     for (unsigned int iquad=0; iquad<n_quad_pts; ++iquad) {
@@ -1274,6 +1387,14 @@ void DGStrong<dim,nstate,real,MeshType>::assemble_volume_term_strong(
         std::array<dealii::Tensor<1,dim,real>,nstate> diffusive_phys_flux;
         //Compute the physical dissipative flux
         diffusive_phys_flux = this->pde_physics_double->dissipative_flux(soln_state, aux_soln_state, filtered_soln_state, filtered_aux_soln_state, current_cell_index);
+
+        if (this->all_parameters->artificial_dissipation_param.add_artificial_dissipation) {
+            using DirectionalState = std::array<dealii::Tensor<1,dim,real>,nstate>;
+            const DirectionalState artificial_diss_phys_flux_at_q = this->artificial_dissip->calc_artificial_dissipation_flux(soln_state, aux_soln_state, artificial_diss_coeff_at_q[iquad]);
+            for (int s=0; s<nstate; s++) {
+                diffusive_phys_flux[s] += artificial_diss_phys_flux_at_q[s];
+            }
+        }
 
         // Manufactured source
         std::array<real,nstate> manufactured_source;
