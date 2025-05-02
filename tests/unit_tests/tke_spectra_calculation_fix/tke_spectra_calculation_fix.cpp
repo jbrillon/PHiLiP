@@ -11,6 +11,8 @@
 #include "flow_solver/flow_solver_cases/periodic_turbulence.h"
 #include <iostream>
 
+#include "mesh/mesh_adaptation/mesh_adaptation.h"
+
 const double TOLERANCE = 1E-12;
 
 
@@ -52,6 +54,16 @@ int main (int argc, char * argv[])
     pcout << "reading values from file prefix: \n " << input_filename_prefix << " \n and projecting... " << std::flush;
     PHiLiP::SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
     pcout << "done." << std::endl;
+
+    // (1) change poly_degree
+    flow_solver->dg->set_p_degree_and_interpolate_solution(5);
+
+    // (2) change mesh
+    PHiLiP::Parameters::MeshAdaptationParam mesh_adaptation_param = (flow_solver->dg->all_parameters->mesh_adaptation_param);
+    mesh_adaptation_param.refine_fraction = 0.0;
+    mesh_adaptation_param.h_coarsen_fraction = 1.0;
+    PHiLiP::MeshAdaptation<dim,double> mesh_adaptation(flow_solver->dg, &(mesh_adaptation_param));
+    mesh_adaptation.fixed_fraction_isotropic_refinement_and_coarsening();
 
     // create the PeriodicTurbulence object
     std::unique_ptr<PHiLiP::FlowSolver::PeriodicTurbulence<dim, nstate>> periodic_turbulence = std::make_unique<PHiLiP::FlowSolver::PeriodicTurbulence<dim,nstate>>(&all_parameters);

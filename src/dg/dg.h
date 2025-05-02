@@ -553,6 +553,9 @@ public:
     //void assemble_residual_dRdW ();
     void assemble_residual (const bool compute_dRdW=false, const bool compute_dRdX=false, const bool compute_d2R=false, const double CFL_mass = 0.0);
 
+    /// Set polynomial degree and interpolate solution.
+    void set_p_degree_and_interpolate_solution(const unsigned int poly_degree);
+
     /// Used in assemble_residual().
     /** IMPORTANT: This does not fully compute the cell residual since it might not
      *  perform the work on all the faces.

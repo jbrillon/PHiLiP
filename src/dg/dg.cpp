@@ -733,6 +733,36 @@ bool DGBase<dim,real,MeshType>::current_cell_should_do_the_work (
     return false;
 }
 
+template<int dim, typename real, typename MeshType>
+void DGBase<dim, real, MeshType> :: set_p_degree_and_interpolate_solution(const unsigned int poly_degree)
+{
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<real>; 
+    using DoFHandlerType   = typename dealii::DoFHandler<dim>;
+    using SolutionTransfer = typename MeshTypeHelper<MeshType>::template SolutionTransfer<dim,VectorType,DoFHandlerType>;
+
+    assert(get_min_fe_degree() == get_max_fe_degree());
+    const unsigned int current_poly_degree = get_min_fe_degree();
+    pcout<<"Changing poly degree from "<<current_poly_degree<< " to "<<poly_degree<<" and interpolating solution."<<std::endl;
+    VectorType solution_coarse = solution;
+    solution_coarse.update_ghost_values();
+
+    SolutionTransfer solution_transfer(dof_handler);
+    solution_transfer.prepare_for_coarsening_and_refinement(solution_coarse);
+
+    set_all_cells_fe_degree(poly_degree);
+    allocate_system();
+    solution.zero_out_ghosts();
+
+    if constexpr (std::is_same_v<typename dealii::SolutionTransfer<dim,VectorType,DoFHandlerType>,
+                                 decltype(solution_transfer)>) {
+        solution_transfer.interpolate(solution_coarse, solution);
+    } else {
+        solution_transfer.interpolate(solution);
+    }
+
+    solution.update_ghost_values();
+}
+
 template <int dim, typename real, typename MeshType>
 template<typename DoFCellAccessorType1, typename DoFCellAccessorType2>
 void DGBase<dim,real,MeshType>::assemble_cell_residual (

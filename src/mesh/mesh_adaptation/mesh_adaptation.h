@@ -48,11 +48,11 @@ public:
     /// Holds parameters of mesh adaptation.
     const Parameters::MeshAdaptationParam *const mesh_adaptation_param;
 
-protected:
-    
     /// Performs fixed fraction refinement based on refinement and coarsening fractions.
     void fixed_fraction_isotropic_refinement_and_coarsening();
-    
+
+protected:   
+
     /// Decide whether to perform h or p refinement based on a smoothness indicator.
     void smoothness_sensor_based_hp_refinement();
     

@@ -189,7 +189,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     //-------------------------------------------------------------
     std::ofstream FILE (filename);
     
-    const unsigned int higher_poly_degree = this->output_velocity_number_of_subvisions*(dg->max_degree+1)-1; // -1 so that n_quad_pts in 1D is n_subdiv*(P+1)
+    const unsigned int higher_poly_degree = this->output_velocity_number_of_subvisions*(dg->get_min_fe_degree()+1)-1; // -1 so that n_quad_pts in 1D is n_subdiv*(P+1)
     
     // check that the file is open and write DOFs
     if (!FILE.is_open()) {
@@ -207,12 +207,12 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     const unsigned int n_quad_pts = pow(vol_quad_equidistant_1D.size(),dim);
 
     const unsigned int init_grid_degree = dg->high_order_grid->fe_system.tensor_degree();
-    OPERATOR::basis_functions<dim,2*dim> soln_basis(1, dg->max_degree, init_grid_degree); 
-    soln_basis.build_1D_volume_operator(dg->oneD_fe_collection_1state[dg->max_degree], vol_quad_equidistant_1D);
-    soln_basis.build_1D_gradient_operator(dg->oneD_fe_collection_1state[dg->max_degree], vol_quad_equidistant_1D);
+    OPERATOR::basis_functions<dim,2*dim> soln_basis(1, dg->get_min_fe_degree(), init_grid_degree); 
+    soln_basis.build_1D_volume_operator(dg->oneD_fe_collection_1state[dg->get_min_fe_degree()], vol_quad_equidistant_1D);
+    soln_basis.build_1D_gradient_operator(dg->oneD_fe_collection_1state[dg->get_min_fe_degree()], vol_quad_equidistant_1D);
 
     // mapping basis for the equidistant node set because we output the physical coordinates
-    OPERATOR::mapping_shape_functions<dim,2*dim> mapping_basis_at_equidistant(1, dg->max_degree, init_grid_degree);
+    OPERATOR::mapping_shape_functions<dim,2*dim> mapping_basis_at_equidistant(1, dg->get_min_fe_degree(), init_grid_degree);
     mapping_basis_at_equidistant.build_1D_shape_functions_at_grid_nodes(dg->high_order_grid->oneD_fe_system, dg->high_order_grid->oneD_grid_nodes);
     mapping_basis_at_equidistant.build_1D_shape_functions_at_flux_nodes(dg->high_order_grid->oneD_fe_system, vol_quad_equidistant_1D, dg->oneD_face_quadrature);
 
