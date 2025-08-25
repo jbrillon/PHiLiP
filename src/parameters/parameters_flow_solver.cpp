@@ -47,7 +47,9 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                           " mach_3_wind_tunnel | "
                           " shock_diffraction | "
                           " explosion_problem | "
-                          " astrophysical_jet "),
+                          " astrophysical_jet | "
+                          " daru_tenaud | "
+                          " viscous_shock_tube "),
                           "The type of flow we want to simulate. "
                           "Choices are "
                           " <taylor_green_vortex | "
@@ -77,7 +79,9 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                           " mach_3_wind_tunnel | "
                           " shock_diffraction | "
                           " explosion_problem | "
-                          " astrophysical_jet >. ");
+                          " astrophysical_jet | "
+                          " daru_tenaud | "
+                          " viscous_shock_tube >. ");
 
         prm.declare_entry("poly_degree", "1",
                           dealii::Patterns::Integer(0, dealii::Patterns::Integer::max_int_value),
@@ -296,6 +300,20 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
         }
         prm.leave_subsection();
 
+        prm.enter_subsection("viscous_shock_tube");
+        {       
+            prm.declare_entry("vst_rho_0", "1.0",
+                              dealii::Patterns::Double(-dealii::Patterns::Double::max_double_value, dealii::Patterns::Double::max_double_value),
+                              "Initial Density Value for Viscous Shock Tube Case");
+            prm.declare_entry("vst_v_0", "1.0",
+                              dealii::Patterns::Double(-dealii::Patterns::Double::max_double_value, dealii::Patterns::Double::max_double_value),
+                              "Initial Velocity (left) Value for Viscous Shock Tube Case");
+            prm.declare_entry("vst_v_inf", "0.2",
+                              dealii::Patterns::Double(-dealii::Patterns::Double::max_double_value, dealii::Patterns::Double::max_double_value),
+                              "Velocity Freestream Value for Viscous Shock Tube Case");
+        }
+        prm.leave_subsection();
+
         prm.enter_subsection("taylor_green_vortex");
         {
             prm.declare_entry("expected_kinetic_energy_at_final_time", "1",
@@ -506,6 +524,8 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
         else if (flow_case_type_string == "shock_diffraction")          {flow_case_type = shock_diffraction;}
         else if (flow_case_type_string == "explosion_problem")          {flow_case_type = explosion_problem;}
         else if (flow_case_type_string == "astrophysical_jet")          {flow_case_type = astrophysical_jet;}
+        else if (flow_case_type_string == "daru_tenaud")                {flow_case_type = daru_tenaud;}
+        else if (flow_case_type_string == "viscous_shock_tube")                {flow_case_type = viscous_shock_tube;}
         else if (flow_case_type_string == "dipole_wall_collision_normal")     
                                                                         {flow_case_type = dipole_wall_collision_normal;}
         else if (flow_case_type_string == "dipole_wall_collision_oblique")
@@ -596,6 +616,14 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
         }       
         prm.leave_subsection();
 
+        prm.enter_subsection("viscous_shock_tube");
+        {
+          vst_rho_0 = prm.get_double("vst_rho_0");
+          vst_v_0 = prm.get_double("vst_v_0");
+          vst_v_inf = prm.get_double("vst_v_inf");
+        }
+        prm.leave_subsection();
+        
         prm.enter_subsection("taylor_green_vortex");
         {
             expected_kinetic_energy_at_final_time = prm.get_double("expected_kinetic_energy_at_final_time");

@@ -34,6 +34,9 @@ public:
     double get_adaptive_time_step_initial(std::shared_ptr<DGBase<dim,double>> dg) override;
 
     /// Updates the maximum local wave speed
+    void update_maximum_local_wave_speed(DGBase<dim, double> &dg);
+
+    /// Updates the maximum local wave speed
     void check_limiter_principle(DGBase<dim, double>& dg);
 
     /// Filename (with extension) for the unsteady data table
@@ -49,6 +52,12 @@ public:
 protected:
     /// Display additional more specific flow case parameters
     void display_additional_flow_case_specific_parameters() const override;
+
+    /// Maximum local wave speed (i.e. convective eigenvalue)
+    double maximum_local_wave_speed;
+
+    /// Pointer to Physics object for computing things on the fly
+    std::shared_ptr< Physics::PhysicsBase<dim,nstate,double> > pde_physics;
 
 };
 

@@ -17,6 +17,7 @@ void shock_tube_1D_grid(
     dealii::GridGenerator::subdivided_hyper_cube(grid, n_subdivisions_x, xmin, xmax, true);
 
     int left_boundary_id = 9999;
+    int right_boundary_id = 1001;
     using flow_case_enum = Parameters::FlowSolverParam::FlowCaseType;
     flow_case_enum flow_case_type = parameters_input->flow_solver_param.flow_case_type;
 
@@ -25,14 +26,20 @@ void shock_tube_1D_grid(
         left_boundary_id = 1001;
     } else if (flow_case_type == flow_case_enum::shu_osher_problem) {
         left_boundary_id = 1007;
+    } else if (flow_case_type == flow_case_enum::viscous_shock_tube) {
+        /* Currently using custom inflow and p0 outflow since 
+           Dirichlet boundary conditions don't seem to work for NS eqns*/
+        left_boundary_id = 1007;
+        right_boundary_id = 1008;
     } 
+
 
     if (left_boundary_id != 9999 && dim == 1) {
         for (auto cell = grid.begin_active(); cell != grid.end(); ++cell) {
             // Set a dummy material ID
             cell->set_material_id(9002);
             if (cell->face(0)->at_boundary()) cell->face(0)->set_boundary_id(left_boundary_id);
-            if (cell->face(1)->at_boundary()) cell->face(1)->set_boundary_id(1001);
+            if (cell->face(1)->at_boundary()) cell->face(1)->set_boundary_id(right_boundary_id);
         }
     }
 }
@@ -355,6 +362,47 @@ void astrophysical_jet_grid(
     }
 }
 
+template<int dim, typename TriangulationType>
+void daru_tenaud_grid(
+    TriangulationType&  grid,
+    const Parameters::AllParameters *const parameters_input) 
+{
+    double xmax = parameters_input->flow_solver_param.grid_xmax;
+    double xmin = parameters_input->flow_solver_param.grid_xmin;
+    double ymax = parameters_input->flow_solver_param.grid_ymax;
+    double ymin = parameters_input->flow_solver_param.grid_ymin;
+
+    unsigned int n_subdivisions_x = parameters_input->flow_solver_param.number_of_grid_elements_x;
+    unsigned int n_subdivisions_y = parameters_input->flow_solver_param.number_of_grid_elements_y;
+    
+    dealii::Point<dim> p1;
+    dealii::Point<dim> p2;
+    p1[0] = xmin; p1[1] = ymin;
+    p2[0] = xmax; p2[1] = ymax;
+    
+    std::vector<unsigned int> n_subdivisions(2);
+
+    n_subdivisions[0] = n_subdivisions_x;//log2(128);
+    n_subdivisions[1] = n_subdivisions_y;//log2(64);
+
+    dealii::GridGenerator::subdivided_hyper_rectangle(grid, n_subdivisions, p1, p2, true);
+
+    // Set boundary type and design type
+    for (typename dealii::parallel::distributed::Triangulation<dim>::active_cell_iterator cell = grid.begin_active(); cell != grid.end(); ++cell) {
+        for (unsigned int face = 0; face < dealii::GeometryInfo<2>::faces_per_cell; ++face) {
+            if (cell->face(face)->at_boundary()) {
+                unsigned int current_id = cell->face(face)->boundary_id();
+                if (current_id == 3) {
+                    cell->face(face)->set_boundary_id(1006); // top bc, slip wall
+                }
+                else {
+                    cell->face(face)->set_boundary_id(1001); // left, right, bottom, no-slip adiabatic
+                }
+            }
+        }
+    }
+}
+
 #if PHILIP_DIM==1
 template void shock_tube_1D_grid<1, dealii::Triangulation<1>>(
     dealii::Triangulation<1>&   grid,
@@ -376,6 +424,9 @@ template void shock_diffraction_grid<2, dealii::parallel::distributed::Triangula
     dealii::parallel::distributed::Triangulation<2>&    grid,
     const Parameters::AllParameters *const parameters_input);
 template void astrophysical_jet_grid<2, dealii::parallel::distributed::Triangulation<2>>(
+    dealii::parallel::distributed::Triangulation<2>&    grid,
+    const Parameters::AllParameters *const parameters_input);
+template void daru_tenaud_grid<2, dealii::parallel::distributed::Triangulation<2>>(
     dealii::parallel::distributed::Triangulation<2>&    grid,
     const Parameters::AllParameters *const parameters_input);
 #endif

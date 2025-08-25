@@ -4,7 +4,7 @@
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/fe/fe_values.h>
 
-#include "bound_preserving_limiter_tests.h"
+#include "viscous_shock_tube_convergence.h"
 
 #include "physics/initial_conditions/initial_condition_function.h"
 #include "flow_solver/flow_solver_factory.h"
@@ -13,35 +13,36 @@ namespace PHiLiP {
 namespace Tests {
 
 template <int dim, int nstate>
-BoundPreservingLimiterTests<dim, nstate>::BoundPreservingLimiterTests(
+VSTConvergenceTest<dim, nstate>::VSTConvergenceTest(
     const PHiLiP::Parameters::AllParameters* const parameters_input,
     const dealii::ParameterHandler& parameter_handler_input)
     :
     TestsBase::TestsBase(parameters_input)
     , parameter_handler(parameter_handler_input)
-    , rho_0(1.0)
-    , v_0(1.0)
-    , v_inf(0.2)
-    , mach_inf(20.0)
-    , mu(0.001)
-    , Pr(0.75)
+    , gam(parameters_input->euler_param.gamma_gas)
+    , rho_0(parameters_input->flow_solver_param.vst_rho_0)
+    , v_0(parameters_input->flow_solver_param.vst_v_0)
+    , v_inf(parameters_input->flow_solver_param.vst_v_inf)
+    , mach_inf(parameters_input->euler_param.mach_inf)
+    , mu(parameters_input->navier_stokes_param.nondimensionalized_constant_viscosity)
+    , Pr(parameters_input->navier_stokes_param.prandtl_number)
+    , v_1((this->gam-1.0 + (2.0/pow(this->mach_inf,2.0)))/(this->gam + 1.0))
 {}
 
 template <int dim, int nstate>
-double BoundPreservingLimiterTests<dim, nstate>::bisection_solve_vst(const dealii::Point<dim> qpoint, double final_time) const
+double VSTConvergenceTest<dim, nstate>::bisection_solve_vst(const dealii::Point<dim> qpoint, double final_time) const
 {
     PHiLiP::Parameters::AllParameters param = *all_parameters;
     
     const double rho_0 = this->rho_0;
     const double v_0 = this->v_0;
+    const double v_1 = this->v_1;
     const double v_inf = this->v_inf;
-    const double gam = 1.4;
-    const double mach_inf = this->mach_inf;
+    const double gam = this->gam;
     const double mu = this->mu;
     const double Pr = this->Pr;
 
     const double m_0 = rho_0*v_0;
-    const double v_1 = (gam-1.0 + (2.0/pow(mach_inf,2.0)))/(gam + 1);
     const double v_01 = sqrt(v_0*v_1);
     const double cp = gam/(gam-1.0);
     const double cv = 1/(gam-1.0);
@@ -82,55 +83,48 @@ double BoundPreservingLimiterTests<dim, nstate>::bisection_solve_vst(const deali
 }
 
 template <int dim, int nstate>
-double BoundPreservingLimiterTests<dim, nstate>::calculate_uexact(const dealii::Point<dim> qpoint, const dealii::Tensor<1, 3, double> adv_speeds, double final_time) const
+std::array<double,3> VSTConvergenceTest<dim, nstate>::calculate_uexact(const dealii::Point<dim> qpoint, double final_time) const
 {
-    PHiLiP::Parameters::AllParameters all_parameters_new = *all_parameters;
-    using flow_case_enum = Parameters::FlowSolverParam::FlowCaseType;
-    flow_case_enum flow_case = all_parameters_new.flow_solver_param.flow_case_type;
-    const double pi = atan(1) * 4.0;
+    std::array<double,3> exact_sol;
 
-    double uexact = 1.0;
-    if (flow_case == flow_case_enum::low_density_2d && dim == 2) {
-        uexact = 1.0 + 0.999 * sin((qpoint[0] + qpoint[1] - (2.00 * final_time)));
-    }
-    if (flow_case == flow_case_enum::viscous_shock_tube && dim == 1) {
-        double vel_exact = bisection_solve_vst(qpoint,final_time);
-        uexact = (this->rho_0*this->v_0)/vel_exact;
-        //std::cout << qpoint[0] << "   " << uexact << std::endl;
-    }
-    else {
-        for (int idim = 0; idim < dim; idim++) {
-            if (flow_case == flow_case_enum::burgers_limiter)
-                uexact *= cos(pi * (qpoint[idim] - final_time));//for grid 1-3
-            if (flow_case == flow_case_enum::advection_limiter)
-                uexact *= sin(2.0 * pi * (qpoint[idim] - adv_speeds[idim] * final_time));//for grid 1-3
-        }
-    }
+    double v_exact = bisection_solve_vst(qpoint,final_time);
+    double rho_exact = (this->rho_0*this->v_0)/v_exact;
+    double mom_exact = rho_exact*(this->v_inf + v_exact);
 
-    return uexact;
+    double internalEnergy_exact = 1.0/(2.0*this->gam)*((this->gam+1.0)/(this->gam-1.0)*pow(sqrt(this->v_0*this->v_1),2.0)-pow(v_exact,2.0));
+    double E_exact = rho_exact*(internalEnergy_exact+1.0/2.0*pow(this->v_inf+v_exact,2.0));
+
+    exact_sol[0] = rho_exact; exact_sol[1] = mom_exact; exact_sol[2] = E_exact;
+    return exact_sol;
 }
 
 template <int dim, int nstate>
-std::array<double,3> BoundPreservingLimiterTests<dim, nstate>::calculate_l_n_error(
+std::array<double,3> VSTConvergenceTest<dim, nstate>::calculate_l_n_error(
     std::shared_ptr<DGBase<dim, double>> dg,
     const int poly_degree,
     const double final_time) const
 {
     // Overintegrate the error to make sure there is not integration error in the error estimate
-    int overintegrate = 10;
+    int overintegrate = 0; // keep as zero; see periodic_turbulence.cpp
     dealii::QGauss<dim> quad_extra(poly_degree + 1 + overintegrate);
     dealii::FEValues<dim, dim> fe_values_extra(*(dg->high_order_grid->mapping_fe_field), dg->fe_collection[poly_degree], quad_extra,
         dealii::update_values | dealii::update_JxW_values | dealii::update_quadrature_points);
     const unsigned int n_quad_pts = fe_values_extra.n_quadrature_points;
     std::array<double, nstate> soln_at_q;
 
-    double l1error = 0.0;
-    double l2error = 0.0;
-    double linferror = 0.0;
+    std::array<double,3> l1error;
+    std::array<double,3> l2error;
+    std::array<double,3> linferror;
+    std::array<double,3> exact_l1;
+    std::array<double,3> exact_l2;
+    std::array<double,3> exact_linf;
 
+    for (unsigned int istate = 0; istate < 3; ++istate) {
+        l1error[istate] = 0.0; l2error[istate] = 0.0; linferror[istate] = 0.0;
+        exact_l1[istate] = 0.0; exact_l2[istate] = 0.0; exact_linf[istate] = 0.0;
+    }
     // Integrate every cell and compute L2
     std::vector<dealii::types::global_dof_index> dofs_indices(fe_values_extra.dofs_per_cell);
-    const dealii::Tensor<1, 3, double> adv_speeds = Parameters::ManufacturedSolutionParam::get_default_advection_vector();
     for (auto cell = dg->dof_handler.begin_active(); cell != dg->dof_handler.end(); ++cell) {
         if (!cell->is_locally_owned()) continue;
 
@@ -146,22 +140,41 @@ std::array<double,3> BoundPreservingLimiterTests<dim, nstate>::calculate_l_n_err
             }
 
             const dealii::Point<dim> qpoint = (fe_values_extra.quadrature_point(iquad));
-            double uexact = calculate_uexact(qpoint, adv_speeds, final_time);   
+            std::array<double,3> uexact = calculate_uexact(qpoint, final_time);   
 
-            //std::cout << "u:   " << soln_at_q[0] << "   uexact:   " << uexact << std::endl;       
-            l1error += pow(abs(soln_at_q[0] - uexact), 1.0) * fe_values_extra.JxW(iquad);
-            l2error += pow(abs(soln_at_q[0] - uexact), 2.0) * fe_values_extra.JxW(iquad);
-            //L-infinity norm
-            linferror = std::max(abs(soln_at_q[0]-uexact), linferror);
+            for(unsigned int istate = 0; istate < 3; ++istate){
+                std::cout << "u:   " << soln_at_q[0] << "   uexact:   " << uexact[0] << std::endl;       
+                l1error[istate] += pow(abs(soln_at_q[istate] - uexact[istate]), 1.0) * fe_values_extra.JxW(iquad);
+                l2error[istate] += pow(abs(soln_at_q[istate] - uexact[istate]), 2.0) * fe_values_extra.JxW(iquad);
+                //L-infinity norm
+                linferror[istate] = std::max(abs(soln_at_q[istate]-uexact[istate]), linferror[istate]);
+
+                exact_l1[istate] += abs(uexact[istate]) * fe_values_extra.JxW(iquad);
+                exact_l2[istate] += pow(abs(uexact[istate]),2.0) * fe_values_extra.JxW(iquad);
+                exact_linf[istate] = std::max(abs(uexact[istate]), exact_linf[istate]); 
+            }
         }
     }
     //MPI sum
-    double l1error_mpi = dealii::Utilities::MPI::sum(l1error, this->mpi_communicator);
+    double exact_l1_mpi = 0.0;
+    double exact_l2_mpi = 0.0;
+    double exact_linf_mpi = 0.0;
 
-    double l2error_mpi = dealii::Utilities::MPI::sum(l2error, this->mpi_communicator);
-    l2error_mpi = pow(l2error_mpi, 1.0/2.0);
+    double l1error_mpi = 0.0;
+    double l2error_mpi = 0.0;
+    double linferror_mpi = 0.0;
 
-    double linferror_mpi = dealii::Utilities::MPI::max(linferror, this->mpi_communicator);
+    for(unsigned int istate = 0; istate < 3; ++istate){ 
+        exact_l1_mpi = dealii::Utilities::MPI::sum(exact_l1[istate], this->mpi_communicator);
+        exact_l2_mpi = dealii::Utilities::MPI::sum(exact_l2[istate], this->mpi_communicator);
+        exact_linf_mpi = dealii::Utilities::MPI::max(exact_linf[istate], this->mpi_communicator);
+
+        l1error_mpi += dealii::Utilities::MPI::sum(l1error[istate], this->mpi_communicator)/exact_l1_mpi;
+        l2error_mpi += pow(dealii::Utilities::MPI::sum(l2error[istate], this->mpi_communicator)/exact_l2_mpi, 0.5);
+        //L-infinity norm
+        linferror_mpi += dealii::Utilities::MPI::max(linferror[istate], this->mpi_communicator)/exact_linf_mpi;
+
+    }
 
     std::array<double,3> lerror_mpi;
     lerror_mpi[0] = l1error_mpi;
@@ -171,56 +184,21 @@ std::array<double,3> BoundPreservingLimiterTests<dim, nstate>::calculate_l_n_err
 }
 
 template <int dim, int nstate>
-int BoundPreservingLimiterTests<dim, nstate>::run_test() const
+int VSTConvergenceTest<dim, nstate>::run_test() const
 {
-    pcout << " Running Bound Preserving Limiter test. " << std::endl;
+    pcout << " Running 1D Viscous Shock Tube Convergence test. " << std::endl;
     pcout << dim << "    " << nstate << std::endl;
     PHiLiP::Parameters::AllParameters all_parameters_new = *all_parameters;
 
     int test_result = 1;
 
-    if (!all_parameters_new.limiter_param.use_OOA) {
-        test_result = run_full_limiter_test();
-    }
-    else {
-        test_result = run_convergence_test();
-    }
+    test_result = run_convergence_test();
+
     return test_result; //if got to here means passed the test, otherwise would've failed earlier
 }
 
 template <int dim, int nstate>
-int BoundPreservingLimiterTests<dim, nstate>::run_full_limiter_test() const
-{
-    pcout << "\n" << "Creating FlowSolver" << std::endl;
-
-    PHiLiP::Parameters::AllParameters all_parameters_new = *all_parameters;
-    Parameters::AllParameters param = *(TestsBase::all_parameters);
-
-    using flow_case_enum = Parameters::FlowSolverParam::FlowCaseType;
-    flow_case_enum flow_case = all_parameters_new.flow_solver_param.flow_case_type;
-    const double pi = atan(1) * 4.0;
-    if (flow_case == Parameters::FlowSolverParam::FlowCaseType::low_density_2d) {
-        param.flow_solver_param.grid_left_bound = 0.0;
-        param.flow_solver_param.grid_right_bound = 2.0 * pi;
-
-        // To ensure PPL can be used
-        param.flow_solver_param.grid_xmin = param.flow_solver_param.grid_left_bound;
-        param.flow_solver_param.grid_xmax = param.flow_solver_param.grid_right_bound;
-        param.flow_solver_param.grid_ymin = param.flow_solver_param.grid_left_bound;
-        param.flow_solver_param.grid_ymax = param.flow_solver_param.grid_right_bound;
-
-        param.flow_solver_param.number_of_grid_elements_x = pow(2.0,param.flow_solver_param.number_of_mesh_refinements);
-        param.flow_solver_param.number_of_grid_elements_y = pow(2.0,param.flow_solver_param.number_of_mesh_refinements);
-    }
-
-    std::unique_ptr<FlowSolver::FlowSolver<dim, nstate>> flow_solver = FlowSolver::FlowSolverFactory<dim, nstate>::select_flow_case(&param, parameter_handler);
-    flow_solver->run();
-
-    return 0;
-}
-
-template <int dim, int nstate>
-int BoundPreservingLimiterTests<dim, nstate>::run_convergence_test() const
+int VSTConvergenceTest<dim, nstate>::run_convergence_test() const
 {
     PHiLiP::Parameters::AllParameters all_parameters_new = *all_parameters;
     PHiLiP::Parameters::ManufacturedConvergenceStudyParam manu_grid_conv_param = all_parameters_new.manufactured_convergence_study_param;
@@ -239,21 +217,6 @@ int BoundPreservingLimiterTests<dim, nstate>::run_convergence_test() const
 
         using flow_case_enum = Parameters::FlowSolverParam::FlowCaseType;
         flow_case_enum flow_case = all_parameters_new.flow_solver_param.flow_case_type;
-        const double pi = atan(1) * 4.0;
-
-        if (flow_case == Parameters::FlowSolverParam::FlowCaseType::low_density_2d) {
-            param.flow_solver_param.grid_left_bound = 0.0;
-            param.flow_solver_param.grid_right_bound = 2.0 * pi;
-
-            // To ensure PPL can be used
-            param.flow_solver_param.grid_xmin = param.flow_solver_param.grid_left_bound;
-            param.flow_solver_param.grid_xmax = param.flow_solver_param.grid_right_bound;
-            param.flow_solver_param.grid_ymin = param.flow_solver_param.grid_left_bound;
-            param.flow_solver_param.grid_ymax = param.flow_solver_param.grid_right_bound;
-
-            param.flow_solver_param.number_of_grid_elements_x = pow(2.0,param.flow_solver_param.number_of_mesh_refinements);
-            param.flow_solver_param.number_of_grid_elements_y = pow(2.0,param.flow_solver_param.number_of_mesh_refinements);
-        }
 
         if (flow_case == Parameters::FlowSolverParam::FlowCaseType::viscous_shock_tube) {
             param.flow_solver_param.grid_left_bound = -1.0;
@@ -268,11 +231,6 @@ int BoundPreservingLimiterTests<dim, nstate>::run_convergence_test() const
             param.flow_solver_param.vst_rho_0 = this->rho_0;
             param.flow_solver_param.vst_v_0 = this->v_0;
             param.flow_solver_param.vst_v_inf = this->v_inf;
-            
-            param.euler_param.mach_inf = this->mach_inf;
-            param.navier_stokes_param.nondimensionalized_constant_viscosity = this->mu;
-            param.navier_stokes_param.use_constant_viscosity = true;
-            param.navier_stokes_param.prandtl_number = this->Pr;
         }
 
         std::unique_ptr<FlowSolver::FlowSolver<dim, nstate>> flow_solver = FlowSolver::FlowSolverFactory<dim, nstate>::select_flow_case(&param, parameter_handler);
@@ -284,7 +242,7 @@ int BoundPreservingLimiterTests<dim, nstate>::run_convergence_test() const
         const double final_time_actual = flow_solver->ode_solver->current_time;
 
         // output results
-        const unsigned int n_dofs = flow_solver->dg->dof_handler.n_dofs();
+        const unsigned int n_dofs = flow_solver->dg->dof_handler.n_dofs()/((double)nstate);
         this->pcout << "Dimension: " << dim
         << "\t Polynomial degree p: " << poly_degree
         << std::endl
@@ -349,12 +307,7 @@ int BoundPreservingLimiterTests<dim, nstate>::run_convergence_test() const
 }
 
 #if PHILIP_DIM==1
-template class BoundPreservingLimiterTests<PHILIP_DIM, PHILIP_DIM>;
-template class BoundPreservingLimiterTests<PHILIP_DIM, PHILIP_DIM + 2>;
-#elif PHILIP_DIM==2
-template class BoundPreservingLimiterTests<PHILIP_DIM, PHILIP_DIM>;
-template class BoundPreservingLimiterTests<PHILIP_DIM, PHILIP_DIM + 2>;
-template class BoundPreservingLimiterTests<PHILIP_DIM, 1>;
+template class VSTConvergenceTest<PHILIP_DIM, PHILIP_DIM + 2>;
 #endif
 
 } // Tests namespace

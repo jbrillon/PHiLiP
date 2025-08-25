@@ -75,6 +75,9 @@ std::shared_ptr<Triangulation> PositivityPreservingTests<dim,nstate>::generate_g
     else if (dim==2 && flow_case_type == flow_case_enum::astrophysical_jet) {
         Grids::astrophysical_jet_grid<dim>(*grid, &this->all_param);
     }
+    else if (dim==2 && flow_case_type == flow_case_enum::daru_tenaud) {
+        Grids::daru_tenaud_grid<dim>(*grid, &this->all_param);
+    }
     else if (dim==2 && flow_case_type == flow_case_enum::double_mach_reflection) {
         if(this->all_param.flow_solver_param.use_gmsh_mesh) {
             const std::string mesh_filename = this->all_param.flow_solver_param.input_mesh_filename+std::string(".msh");
@@ -178,6 +181,9 @@ void PositivityPreservingTests<dim, nstate>::compute_unsteady_data_and_write_to_
     //unpack current iteration and current time from ode solver
     const unsigned int current_iteration = ode_solver->current_iteration;
     const double current_time = ode_solver->current_time;
+
+    // Update maximum local wave speed for adaptive time_step
+    if(this->all_param.flow_solver_param.adaptive_time_step) this->update_maximum_local_wave_speed(*dg);
 
     this->check_positivity_density(*dg);
     if (this->mpi_rank == 0) {

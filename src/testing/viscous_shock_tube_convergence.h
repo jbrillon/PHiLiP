@@ -1,5 +1,5 @@
-#ifndef __BOUND_PRESERVING_LIMITER_TESTS_H__
-#define __BOUND_PRESERVING_LIMITER_TESTS_H__
+#ifndef __1D_VST_CONVERGENCE_H__
+#define __1D_VST_CONVERGENCE_H__
 
 #include "tests.h"
 #include "dg/dg_base.hpp"
@@ -13,11 +13,11 @@ namespace Tests {
 * Equation (1D & 2D) and Low Density Accuracy Test (2D Euler)
 *************************************************************/
 template <int dim, int nstate>
-class BoundPreservingLimiterTests : public TestsBase
+class VSTConvergenceTest : public TestsBase
 {
 public:
     /// Constructor.
-    explicit BoundPreservingLimiterTests(const Parameters::AllParameters* const parameters_input,
+    explicit VSTConvergenceTest(const Parameters::AllParameters* const parameters_input,
         const dealii::ParameterHandler& parameter_handler_input);
 
     /// Parameter handler for storing the .prm file being ran
@@ -29,8 +29,6 @@ public:
     int run_test() const override;
 
 private:
-    /// Runs full test and outputs VTK files
-    int run_full_limiter_test() const;
 
     /// Runs convergence test and prints out results in console
     int run_convergence_test() const;
@@ -40,15 +38,14 @@ private:
         double final_time) const;
 
     /// Calculate and return the exact value at the point depending on the case being run
-    double calculate_uexact(const dealii::Point<dim> qpoint,
-        const dealii::Tensor<1, 3, double> adv_speeds,
+    std::array<double,3> calculate_uexact(const dealii::Point<dim> qpoint,
         double final_time) const;
 
     /// Calculate and return the L2 Error
     std::array<double,3> calculate_l_n_error(std::shared_ptr<DGBase<dim, double>> flow_solver_dg, const int poly_degree, const double final_time) const;
 
     /// Parameters for Viscous Shock Tube initialization/exact solution solve
-    double rho_0, v_0, v_inf, mach_inf, mu, Pr;
+    double gam, rho_0, v_0, v_inf, mach_inf, mu, Pr, v_1;
 };
 
 } // End of Tests namespace

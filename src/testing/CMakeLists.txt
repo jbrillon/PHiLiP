@@ -37,6 +37,7 @@ set(TESTS_SOURCE
     bound_preserving_limiter_tests.cpp
     naca0012_unsteady_check_quick.cpp
     turbulent_channel_flow_skin_friction_check.cpp
+    viscous_shock_tube_convergence.cpp
     )
 
 foreach(dim RANGE 1 3)

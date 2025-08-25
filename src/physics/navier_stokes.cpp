@@ -1401,7 +1401,7 @@ void NavierStokes<dim,nstate,real>
         // Wall boundary condition
         boundary_wall_viscous_flux (normal_int, soln_int, soln_grad_int, soln_bc, soln_grad_bc);
     }
-    else if (boundary_type == 1006)
+    else if (boundary_type == 1006 || boundary_type == 1007 || boundary_type == 1008)
     {
         /* Reference: Brian Vermeire's thesis 2014 Equations 3.72-3.73
            For slip wall boundary conditions, we require that the 

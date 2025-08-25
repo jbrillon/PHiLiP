@@ -202,6 +202,7 @@ public:
         homogeneous_isotropic_turbulence_initialization_check,
         low_density,
         turbulent_channel_flow_skin_friction_check,
+        viscous_shock_tube
     };
     /// Store selected TestType from the input file.
     TestType test_type;
