@@ -750,7 +750,7 @@ void DGBase<dim, real, MeshType> :: set_p_degree_and_interpolate_solution(const 
     solution_transfer.prepare_for_coarsening_and_refinement(solution_coarse);
 
     set_all_cells_fe_degree(poly_degree);
-    allocate_system();
+    allocate_system(false,false,false); // NOTE: Note: Allocating DG without AD matrices.
     solution.zero_out_ghosts();
 
     if constexpr (std::is_same_v<typename dealii::SolutionTransfer<dim,VectorType,DoFHandlerType>,
