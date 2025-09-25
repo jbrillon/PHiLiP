@@ -61,11 +61,10 @@ int main (int argc, char * argv[])
         PHiLiP::SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
         pcout << "done." << std::endl;
     */
-    periodic_turbulence->output_velocity_field(flow_solver->dg,1,9.0); // output velocity field at original polynomial degree
-
     // create the PeriodicTurbulence object
     std::unique_ptr<PHiLiP::FlowSolver::PeriodicTurbulence<dim, nstate>> periodic_turbulence = std::make_unique<PHiLiP::FlowSolver::PeriodicTurbulence<dim,nstate>>(&all_parameters);
     // periodic_turbulence->output_velocity_field(flow_solver->dg,0,8.0);
+    periodic_turbulence->output_velocity_field(flow_solver->dg,1,9.0); // output velocity field at original polynomial degree
 
     // (1) change poly_degree
     flow_solver->dg->set_p_degree_and_interpolate_solution(5);
