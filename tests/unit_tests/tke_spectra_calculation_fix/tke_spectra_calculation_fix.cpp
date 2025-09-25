@@ -46,7 +46,7 @@ int main (int argc, char * argv[])
     /* IF READING IN THE SOLUTION, UNCOMMENT THIS BLOCK
     std::unique_ptr<PHiLiP::FlowSolver::FlowSolver<dim,nstate>> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::select_flow_case(&all_parameters, parameter_handler);
     */
-    std::unique_ptr<PHiLiP::FlowSolver::FlowSolver<dim,nstate>> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::create_flow_solver(&all_parameters,parameter_handler);
+    std::unique_ptr<PHiLiP::FlowSolver::FlowSolver<dim,nstate>> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::select_flow_case(&all_parameters,parameter_handler);
     int run_error = flow_solver->run();
     pcout << "Flow simulation complete with run error code: " << run_error << std::endl;
     /* IF READING IN THE SOLUTION, UNCOMMENT THIS BLOCK
