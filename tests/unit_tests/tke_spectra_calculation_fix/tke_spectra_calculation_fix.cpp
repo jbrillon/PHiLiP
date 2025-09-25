@@ -46,7 +46,7 @@ int main (int argc, char * argv[])
     /* IF READING IN THE SOLUTION, UNCOMMENT THIS BLOCK
     std::unique_ptr<PHiLiP::FlowSolver::FlowSolver<dim,nstate>> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::select_flow_case(&all_parameters, parameter_handler);
     */
-    std::unique_ptr<PHiLiP::FlowSolver::FlowSolverBase> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::create_flow_solver(&all_parameters,parameter_handler);
+    std::unique_ptr<PHiLiP::FlowSolver::FlowSolver<dim,nstate>> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::create_flow_solver(&all_parameters,parameter_handler);
     int run_error = flow_solver->run();
     pcout << "Flow simulation complete with run error code: " << run_error << std::endl;
     /* IF READING IN THE SOLUTION, UNCOMMENT THIS BLOCK
@@ -61,6 +61,11 @@ int main (int argc, char * argv[])
         PHiLiP::SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
         pcout << "done." << std::endl;
     */
+    periodic_turbulence->output_velocity_field(flow_solver->dg,1,9.0); // output velocity field at original polynomial degree
+
+    // create the PeriodicTurbulence object
+    std::unique_ptr<PHiLiP::FlowSolver::PeriodicTurbulence<dim, nstate>> periodic_turbulence = std::make_unique<PHiLiP::FlowSolver::PeriodicTurbulence<dim,nstate>>(&all_parameters);
+    // periodic_turbulence->output_velocity_field(flow_solver->dg,0,8.0);
 
     // (1) change poly_degree
     flow_solver->dg->set_p_degree_and_interpolate_solution(5);
@@ -71,10 +76,6 @@ int main (int argc, char * argv[])
     mesh_adaptation_param.h_coarsen_fraction = 1.0;
     PHiLiP::MeshAdaptation<dim,double> mesh_adaptation(flow_solver->dg, &(mesh_adaptation_param));
     mesh_adaptation.fixed_fraction_isotropic_refinement_and_coarsening();
-
-    // create the PeriodicTurbulence object
-    std::unique_ptr<PHiLiP::FlowSolver::PeriodicTurbulence<dim, nstate>> periodic_turbulence = std::make_unique<PHiLiP::FlowSolver::PeriodicTurbulence<dim,nstate>>(&all_parameters);
-    // periodic_turbulence->output_velocity_field(flow_solver->dg,0,8.0);
 
     // do it again for the next outputted velocity field
     periodic_turbulence->output_velocity_field(flow_solver->dg,1,9.0);

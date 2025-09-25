@@ -161,7 +161,7 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
     // NOTE: Same loop from read_values_from_file_and_project() in set_initial_condition.cpp
     
     // Get filename prefix based on output file index and the flow field quantity filename prefix
-    const std::string filename_prefix = flow_field_quantity_filename_prefix + std::string("-") + std::to_string(output_file_index);
+    const std::string filename_prefix = flow_field_quantity_filename_prefix + std::string("-") + std::to_string(output_file_index) + std::string("-P") + std::to_string(dg->get_min_fe_degree());
 
     // (1) Get filename based on MPI rank
     //-------------------------------------------------------------
