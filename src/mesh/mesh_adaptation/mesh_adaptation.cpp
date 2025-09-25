@@ -74,7 +74,7 @@ void MeshAdaptation<dim,real,MeshType>::fixed_fraction_isotropic_refinement_and_
     dg->high_order_grid->triangulation->execute_coarsening_and_refinement();
     dg->high_order_grid->execute_coarsening_and_refinement();
     
-    dg->allocate_system ();
+    dg->allocate_system(false,false,false);
     dg->solution.zero_out_ghosts();
     solution_transfer.interpolate(dg->solution);
     dg->solution.update_ghost_values();
