@@ -43,17 +43,24 @@ int main (int argc, char * argv[])
 
     AssertDimension(all_parameters.dimension, PHILIP_DIM);
 
+    /* IF READING IN THE SOLUTION, UNCOMMENT THIS BLOCK
     std::unique_ptr<PHiLiP::FlowSolver::FlowSolver<dim,nstate>> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<dim,nstate>::select_flow_case(&all_parameters, parameter_handler);
-    // (1) read in the first outputted velocity field
-    // const std::string input_filename_prefix = "/media/julien/Samsung_T5/NarvalFiles/2023_JCP/robustness/viscous_TGV_ILES_NSFR_cDG_IR_2PF_GL_OI-0_dofs048_p5_procs64/setup_files/setup";
-    const std::string input_filename_prefix = "./setup_files/setup";
-    // const std::string input_filename_prefix = parameters_input->flow_solver_param.input_flow_setup_filename_prefix;
-    // TO DO: In bash, cd into each run directory and call the executable; can give relative paths in this 
-    // piece of code so that we dont need to modify it from case to case for the variable: input_filename_prefix
-    // STEP 1: See if it works for the 48^3 first
-    pcout << "reading values from file prefix: \n " << input_filename_prefix << " \n and projecting... " << std::flush;
-    PHiLiP::SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
-    pcout << "done." << std::endl;
+    */
+    std::unique_ptr<PHiLiP::FlowSolver::FlowSolverBase> flow_solver = PHiLiP::FlowSolver::FlowSolverFactory<max_dim,max_nstate>::create_flow_solver(&all_parameters,parameter_handler);
+    run_error = flow_solver->run();
+    pcout << "Flow simulation complete with run error code: " << run_error << std::endl;
+    /* IF READING IN THE SOLUTION, UNCOMMENT THIS BLOCK
+        // (1) read in the first outputted velocity field
+        // const std::string input_filename_prefix = "/media/julien/Samsung_T5/NarvalFiles/2023_JCP/robustness/viscous_TGV_ILES_NSFR_cDG_IR_2PF_GL_OI-0_dofs048_p5_procs64/setup_files/setup";
+        const std::string input_filename_prefix = "./setup_files/setup";
+        // const std::string input_filename_prefix = parameters_input->flow_solver_param.input_flow_setup_filename_prefix;
+        // TO DO: In bash, cd into each run directory and call the executable; can give relative paths in this 
+        // piece of code so that we dont need to modify it from case to case for the variable: input_filename_prefix
+        // STEP 1: See if it works for the 48^3 first
+        pcout << "reading values from file prefix: \n " << input_filename_prefix << " \n and projecting... " << std::flush;
+        PHiLiP::SetInitialCondition<dim,nstate,double>::read_values_from_file_and_project(flow_solver->dg,input_filename_prefix);
+        pcout << "done." << std::endl;
+    */
 
     // (1) change poly_degree
     flow_solver->dg->set_p_degree_and_interpolate_solution(5);
