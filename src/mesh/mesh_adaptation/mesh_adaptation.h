@@ -51,13 +51,13 @@ public:
     /// Performs fixed fraction refinement based on refinement and coarsening fractions.
     void fixed_fraction_isotropic_refinement_and_coarsening();
 
+    /// Stores errors in each cell
+    dealii::Vector<real> cellwise_errors;
+
 protected:   
 
     /// Decide whether to perform h or p refinement based on a smoothness indicator.
     void smoothness_sensor_based_hp_refinement();
-    
-    /// Stores errors in each cell
-    dealii::Vector<real> cellwise_errors;
 
     /// Parallel std::cout.
     dealii::ConditionalOStream pcout;

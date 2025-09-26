@@ -74,9 +74,10 @@ int main (int argc, char * argv[])
     mesh_adaptation_param.refine_fraction = 0.0;
     mesh_adaptation_param.h_coarsen_fraction = 1.0;
     PHiLiP::MeshAdaptation<dim,double> mesh_adaptation(flow_solver->dg, &(mesh_adaptation_param));
-    // cellwise_errors = mesh_error->compute_cellwise_errors();
-    mesh_adaptation.adapt_mesh();
-    // mesh_adaptation.fixed_fraction_isotropic_refinement_and_coarsening();
+    dealii::Vector<double> cellwise_errors (flow_solver->dg->high_order_grid->triangulation->n_active_cells())
+    mesh_adaptation.cellwise_errors = cellwise_errors;
+    // mesh_adaptation.adapt_mesh();
+    mesh_adaptation.fixed_fraction_isotropic_refinement_and_coarsening();
 
     // do it again for the next outputted velocity field
     periodic_turbulence->output_velocity_field(flow_solver->dg,1,9.0);
