@@ -196,8 +196,8 @@ void PeriodicTurbulence<dim, nstate>::output_velocity_field(
         this->pcout << "ERROR: Cannot open file " << filename << std::endl;
         std::abort();
     } else if(this->mpi_rank==0) {
-        // const unsigned int number_of_degrees_of_freedom_per_state = dg->dof_handler.n_dofs()/nstate;
-        const unsigned int number_of_degrees_of_freedom_per_state = pow(this->number_of_cells_per_direction*(higher_poly_degree+1),dim);
+        const unsigned int number_of_degrees_of_freedom_per_state = dg->dof_handler.n_dofs()/nstate;
+        // const unsigned int number_of_degrees_of_freedom_per_state = pow(this->number_of_cells_per_direction*(higher_poly_degree+1),dim);
         FILE << number_of_degrees_of_freedom_per_state << std::string("\n");
     }
 
