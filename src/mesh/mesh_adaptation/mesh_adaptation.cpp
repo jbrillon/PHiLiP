@@ -78,7 +78,7 @@ void MeshAdaptation<dim,real,MeshType>::fixed_fraction_isotropic_refinement_and_
     dg->solution.zero_out_ghosts();
     solution_transfer.interpolate(dg->solution);
     dg->solution.update_ghost_values();
-    dg->assemble_residual ();
+    // dg->assemble_residual ();
 }
 
 template <int dim, typename real, typename MeshType>
