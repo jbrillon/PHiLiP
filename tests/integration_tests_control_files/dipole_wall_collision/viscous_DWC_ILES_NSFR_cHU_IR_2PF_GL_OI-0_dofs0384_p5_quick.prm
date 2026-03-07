@@ -87,7 +87,7 @@ end
 subsection flow_solver
   set flow_case_type = dipole_wall_collision_normal
   set poly_degree = 5
-  set final_time = 3.4999999999999998e-01
+  set final_time = 0.00005
   set constant_time_step = 0.00001
   set courant_friedrichs_lewy_number = 0.1
   set unsteady_data_table_filename = turbulent_quantities
@@ -111,10 +111,10 @@ subsection flow_solver
   end
   set do_compute_unsteady_data_and_write_to_table = true
   subsection taylor_green_vortex
-    set expected_kinetic_energy_at_final_time = 3.7008760689261755e-01
+    set expected_kinetic_energy_at_final_time = 4.9997952787184774e-01
   end
   subsection dipole_wall_collision
-    set expected_enstrophy_at_final_time = 4.0213924997188337e+02
-    set expected_palinstrophy_at_final_time = 1.5806887888692342e+07
+    set expected_enstrophy_at_final_time = 1.9998799360220156e+02
+    set expected_palinstrophy_at_final_time = 1.1044721676334241e+05
   end
 end

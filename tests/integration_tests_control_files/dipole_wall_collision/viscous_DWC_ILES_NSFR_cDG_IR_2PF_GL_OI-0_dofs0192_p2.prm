@@ -15,7 +15,7 @@ set use_curvilinear_split_form = false
 set use_weight_adjusted_mass = false
 set all_boundaries_are_periodic = false
 set check_same_coords_in_weak_dg = false
-set flux_reconstruction = cHU
+set flux_reconstruction = cDG
 set flux_reconstruction_aux = kDG
 set use_inverse_mass_on_the_fly = true
  
@@ -86,7 +86,7 @@ end
 # Flow Solver
 subsection flow_solver
   set flow_case_type = dipole_wall_collision_normal
-  set poly_degree = 5
+  set poly_degree = 2
   set final_time = 3.4999999999999998e-01
   set constant_time_step = 0.00001
   set courant_friedrichs_lewy_number = 0.1
@@ -111,10 +111,11 @@ subsection flow_solver
   end
   set do_compute_unsteady_data_and_write_to_table = true
   subsection taylor_green_vortex
-    set expected_kinetic_energy_at_final_time = 3.7008760689261755e-01
+    set expected_kinetic_energy_at_final_time = 3.6947155283908967e-01
   end
   subsection dipole_wall_collision
-    set expected_enstrophy_at_final_time = 4.0213924997188337e+02
-    set expected_palinstrophy_at_final_time = 1.5806887888692342e+07
+    set expected_enstrophy_at_final_time = 2.7605195929455817e+02
+    set expected_palinstrophy_at_final_time = 1.1802555755089333e+06
   end
 end
+         
