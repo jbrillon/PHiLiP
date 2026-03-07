@@ -13,7 +13,7 @@ TurbulentChannelFlowUnsteadyQuantityCheck<dim, nstate>::TurbulentChannelFlowUnst
         , parameter_handler(parameter_handler_input)
         , average_wall_shear_stress_expected(parameters_input->flow_solver_param.expected_average_wall_shear_stress_at_final_time)
         , skin_friction_coefficient_expected(parameters_input->flow_solver_param.expected_skin_friction_coefficient_at_final_time)
-        , using_wall_model(parameters_input->all_param.using_wall_model)
+        , using_wall_model(parameters_input->using_wall_model)
 {}
 
 template <int dim, int nstate>
