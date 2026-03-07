@@ -169,6 +169,12 @@ public:
 
     /** For dipole wall collision integration tests, expected palinstrophy at final time. */
     double expected_palinstrophy_at_final_time;
+
+    /** For turbulent channel flow integration tests, expected average wall shear stress at final time. */
+    double expected_average_wall_shear_stress_at_final_time;
+
+    /** For turbulent channel flow integration tests, expected skin friction coefficient at final time. */
+    double expected_skin_friction_coefficient_at_final_time;
     
     /// For KHI, the atwood number
     double atwood_number;

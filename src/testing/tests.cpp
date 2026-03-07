@@ -47,7 +47,7 @@
 #include "naca0012_unsteady_check_quick.h"
 #include "turbulent_channel_flow_skin_friction_check.h"
 #include "dipole_wall_collision_unsteady_quantity_check.h"
-// #include "turbulent_channel_flow_unsteady_quantity_check.h"
+#include "turbulent_channel_flow_unsteady_quantity_check.h"
 #include "build_NNLS_problem.h"
 #include "hyper_reduction_comparison.h"
 #include "hyper_adaptive_sampling_run.h"
@@ -309,11 +309,9 @@ std::unique_ptr< TestsBase > TestsFactory<dim,nstate,MeshType>
         if constexpr (dim==3 && nstate==dim+2) return std::make_unique<TurbulentChannelFlowSkinFrictionCheck<dim,nstate>>(parameters_input,parameter_handler_input);
     } else if(test_type == Test_enum::dipole_wall_collision_quantity_check) {
         if constexpr (dim==2 && nstate==dim+2) return std::make_unique<DipoleWallCollisionUnsteadyQuantityCheck<dim,nstate>>(parameters_input,parameter_handler_input);
-    } 
-    // else if(test_type == Test_enum::turbulent_channel_flow_quantity_check) {
-    //     if constexpr (dim==3 && nstate==dim+2) return std::make_unique<TurbulentChannelFlowUnsteadyQuantityCheck<dim,nstate>>(parameters_input,parameter_handler_input);
-    // } 
-    else if(test_type == Test_enum::time_refinement_study) {
+    } else if(test_type == Test_enum::turbulent_channel_flow_quantity_check) {
+        if constexpr (dim==3 && nstate==dim+2) return std::make_unique<TurbulentChannelFlowUnsteadyQuantityCheck<dim,nstate>>(parameters_input,parameter_handler_input);
+    } else if(test_type == Test_enum::time_refinement_study) {
         if constexpr (dim==1 && nstate==1)  return std::make_unique<TimeRefinementStudy<dim, nstate>>(parameters_input, parameter_handler_input);
     } else if(test_type == Test_enum::h_refinement_study_isentropic_vortex) {
         if constexpr (dim+2==nstate && dim!=1)  return std::make_unique<HRefinementStudyIsentropicVortex<dim, nstate>>(parameters_input, parameter_handler_input);
