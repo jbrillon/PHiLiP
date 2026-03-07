@@ -561,6 +561,8 @@ void FlowSolverParam::parse_parameters(dealii::ParameterHandler &prm)
         {
             do_use_stretched_mesh = prm.get_bool("do_use_stretched_mesh");
             do_compute_angular_momentum = prm.get_bool("do_compute_angular_momentum");
+            expected_enstrophy_at_final_time = prm.get_double("expected_enstrophy_at_final_time");
+            expected_palinstrophy_at_final_time = prm.get_double("expected_palinstrophy_at_final_time");
         }
         prm.leave_subsection();
 
