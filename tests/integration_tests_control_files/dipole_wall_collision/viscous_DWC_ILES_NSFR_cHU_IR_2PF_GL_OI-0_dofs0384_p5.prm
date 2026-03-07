@@ -31,7 +31,7 @@ set diss_num_flux = symm_internal_penalty
 #set diss_num_flux = bassi_rebay_2
  
 # additional parameters
-set solution_vtk_files_directory_name = solution_files
+set solution_vtk_files_directory_name = .
 set output_high_order_grid = false
 set enable_higher_order_vtk_output = true
 set do_renumber_dofs = false
@@ -94,7 +94,7 @@ subsection flow_solver
   set steady_state = false
   set adaptive_time_step = false
   set output_restart_files = false
-  set restart_files_directory_name = restart_files
+  set restart_files_directory_name = .
   set output_restart_files_every_dt_time_intervals = 1.0
   set write_unsteady_data_table_file_every_dt_time_intervals = 0.1
   subsection grid
