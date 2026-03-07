@@ -13,6 +13,7 @@ TurbulentChannelFlowUnsteadyQuantityCheck<dim, nstate>::TurbulentChannelFlowUnst
         , parameter_handler(parameter_handler_input)
         , average_wall_shear_stress_expected(parameters_input->flow_solver_param.expected_average_wall_shear_stress_at_final_time)
         , skin_friction_coefficient_expected(parameters_input->flow_solver_param.expected_skin_friction_coefficient_at_final_time)
+        , using_wall_model(parameters_input->all_param.using_wall_model)
 {}
 
 template <int dim, int nstate>
@@ -27,7 +28,7 @@ int TurbulentChannelFlowUnsteadyQuantityCheck<dim, nstate>::run_test() const
     flow_solver_case->compute_and_update_integrated_quantities(*(flow_solver->dg));
 
     double average_wall_shear_stress = 0.0;
-    if(this->all_param.using_wall_model) average_wall_shear_stress = flow_solver_case->get_average_wall_shear_stress_from_wall_model(*(flow_solver->dg));
+    if(using_wall_model) average_wall_shear_stress = flow_solver_case->get_average_wall_shear_stress_from_wall_model(*(flow_solver->dg));
     else average_wall_shear_stress = flow_solver_case->get_average_wall_shear_stress(*(flow_solver->dg));
     flow_solver_case->set_bulk_flow_quantities(*(flow_solver->dg));
     const double skin_friction_coefficient = flow_solver_case->get_skin_friction_coefficient_from_average_wall_shear_stress(average_wall_shear_stress);

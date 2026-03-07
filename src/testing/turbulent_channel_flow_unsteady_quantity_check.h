@@ -25,6 +25,9 @@ public:
     /// Expected skin friction coefficient at final time
     const double skin_friction_coefficient_expected;
 
+    /// Flag for using wall model
+    const bool using_wall_model;
+
     /// Run test
     int run_test () const override;
 };
