@@ -19,14 +19,11 @@ public:
     /// Parameter handler for storing the .prm file being ran
     const dealii::ParameterHandler &parameter_handler;
     
-    /// Expected kinetic energy at final time
-    const double kinetic_energy_expected;
+    /// Expected average wall shear stress at final time
+    const double average_wall_shear_stress_expected;
 
-    /// Expected enstrophy at final time
-    const double enstrophy_expected;
-
-    /// Expected palinstrophy at final time
-    const double palinstrophy_expected;
+    /// Expected skin friction coefficient at final time
+    const double skin_friction_coefficient_expected;
 
     /// Run test
     int run_test () const override;
