@@ -49,7 +49,7 @@ int DipoleWallCollisionUnsteadyQuantityCheck<dim, nstate>::run_test() const
     return 0;
 }
 
-#if PHILIP_DIM==3
+#if PHILIP_DIM==2
     template class DipoleWallCollisionUnsteadyQuantityCheck<PHILIP_DIM,PHILIP_DIM+2>;
 #endif
 } // Tests namespace
