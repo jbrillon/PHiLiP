@@ -333,10 +333,10 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
                               "Relaxation coefficient for the turbulent channel flow source term. Default is 0.");
             prm.declare_entry("expected_average_wall_shear_stress_at_final_time", "1",
                               dealii::Patterns::Double(0, dealii::Patterns::Double::max_double_value),
-                              "For integration test purposes, expected enstrophy at final time.");
-            prm.declare_entry("expected_palinstrophy_at_final_time", "1",
+                              "For integration test purposes, expected average wall shear stress at final time.");
+            prm.declare_entry("expected_skin_friction_coefficient_at_final_time", "1",
                               dealii::Patterns::Double(0, dealii::Patterns::Double::max_double_value),
-                              "For integration test purposes, expected palinstrophy at final time.");
+                              "For integration test purposes, expected skin friction coefficient at final time.");
         }
         prm.leave_subsection();
 
