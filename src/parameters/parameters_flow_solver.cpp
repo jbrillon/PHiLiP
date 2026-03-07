@@ -342,6 +342,12 @@ void FlowSolverParam::declare_parameters(dealii::ParameterHandler &prm)
             prm.declare_entry("do_compute_angular_momentum", "false",
                               dealii::Patterns::Bool(),
                               "Flag to compute the angular momentum. By default, false.");
+            prm.declare_entry("expected_enstrophy_at_final_time", "1",
+                              dealii::Patterns::Double(0, dealii::Patterns::Double::max_double_value),
+                              "For integration test purposes, expected enstrophy at final time.");
+            prm.declare_entry("expected_palinstrophy_at_final_time", "1",
+                              dealii::Patterns::Double(0, dealii::Patterns::Double::max_double_value),
+                              "For integration test purposes, expected palinstrophy at final time.");
         }
         prm.leave_subsection();
 
