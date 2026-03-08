@@ -84,7 +84,7 @@ end
 subsection flow_solver
   set flow_case_type = channel_flow
   set poly_degree = 4
-  set final_time = 5.3791986157412097e-03
+  set final_time = 5.7355005543486852e-03
   set constant_time_step = 0.000068
   set courant_friedrichs_lewy_number = 0.2
   set unsteady_data_table_filename = turbulent_quantities
@@ -107,8 +107,8 @@ subsection flow_solver
     set turbulent_channel_mesh_stretching_function_type = uniform_mesh_no_stretching
     set xvelocity_initial_condition_type = turbulent
     set relaxation_coefficient_for_turbulent_channel_flow_source_term = 0.0
-    set expected_average_wall_shear_stress_at_final_time = 3.3754140717781986e-03
-    set expected_skin_friction_coefficient_at_final_time = 6.8202401169709130e-03
+    set expected_average_wall_shear_stress_at_final_time = 3.3751974972133282e-03
+    set expected_skin_friction_coefficient_at_final_time = 6.8334929875434733e-03
   end
   set apply_initial_condition_method = project_initial_condition_function
   subsection output_velocity_field
